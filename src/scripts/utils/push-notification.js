@@ -4,40 +4,63 @@ let pushSubscription = null;
 let isPushEnabled = false;
 
 export async function initPushNotification() {
-  if ("serviceWorker" in navigator && "PushManager" in window) {
-    try {
-      // Wait for service worker to be ready (registered by VitePWA)
-      const registration = await navigator.serviceWorker.ready;
-      console.log("Service Worker ready for push notifications:", registration);
-
-      if (!("showNotification" in ServiceWorkerRegistration.prototype)) {
-        console.warn("Notifications aren't supported.");
-        return;
-      }
-
-      if (Notification.permission === "granted") {
-        await subscribeToPush();
-      } else if (Notification.permission === "default") {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-          await subscribeToPush();
-        }
-      }
-
-      navigator.serviceWorker.addEventListener("message", (event) => {
-        console.log("Message from service worker:", event.data);
-      });
-    } catch (error) {
-      console.error("Service Worker initialization failed:", error);
+  try {
+    // Check basic requirements
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      console.warn("Push notifications not supported in this browser");
+      return;
     }
-  } else {
-    console.warn("Service workers or Push messaging aren't supported.");
+
+    // Wait for service worker to be ready (registered by VitePWA)
+    const registration = await navigator.serviceWorker.ready;
+    console.log("Service Worker ready for push notifications:", registration);
+
+    // Check notification support
+    if (!("showNotification" in ServiceWorkerRegistration.prototype)) {
+      console.warn("Notifications aren't supported.");
+      return;
+    }
+
+    // Handle notification permission
+    if (Notification.permission === "granted") {
+      console.log("Notification permission already granted");
+      // Don't auto-subscribe, wait for user interaction
+    } else if (Notification.permission === "default") {
+      console.log("Notification permission not requested yet");
+      // Don't auto-request, wait for user interaction
+    } else {
+      console.log("Notification permission denied");
+    }
+
+    // Listen for service worker messages
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      console.log("Message from service worker:", event.data);
+    });
+
+    console.log("Push notification initialization completed successfully");
+
+  } catch (error) {
+    console.error("Service Worker initialization failed:", error);
+    // Don't throw error, just log it - push notifications are not critical
   }
 }
 
 async function subscribeToPush() {
   try {
     const registration = await navigator.serviceWorker.ready;
+
+    // Check if HTTPS is required for push notifications
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.warn("Push notifications not supported in this browser");
+      return;
+    }
+
+    // Check if we're on HTTPS (required for push notifications)
+    if (!window.location.protocol.includes('https') && window.location.hostname !== 'localhost') {
+      console.warn("Push notifications require HTTPS");
+      return;
+    }
+
     pushSubscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(CONFIG.VAPID_PUBLIC_KEY),
@@ -45,8 +68,22 @@ async function subscribeToPush() {
 
     console.log("Push notification subscription:", pushSubscription);
     isPushEnabled = true;
+
+    // Send subscription to server (optional, for real push service)
+    await sendSubscriptionToServer(pushSubscription);
+
   } catch (error) {
     console.error("Failed to subscribe to push notifications:", error);
+    isPushEnabled = false;
+
+    // Show user-friendly error message
+    if (error.name === 'NotAllowedError') {
+      console.warn("Push notifications permission denied by user");
+    } else if (error.name === 'AbortError') {
+      console.warn("Push subscription aborted");
+    } else {
+      console.error("Push notification subscription failed:", error.message);
+    }
   }
 }
 

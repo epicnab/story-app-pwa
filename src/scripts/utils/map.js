@@ -3,5 +3,7 @@ export function getLeaflet() {
     return window.L;
   }
 
-  throw new Error('Leaflet is not loaded. Please ensure the CDN script is included in the HTML.');
+  throw new Error(
+    "Leaflet is not loaded. Please ensure the CDN script is included in the HTML."
+  );
 }

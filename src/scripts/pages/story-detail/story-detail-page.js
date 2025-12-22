@@ -1,6 +1,6 @@
-import { getStories } from '../../data/api.js';
-import { getStoryFromDB } from '../../utils/indexeddb.js';
-import { getLeaflet } from '../../utils/map.js';
+import { getStories } from "../../data/api.js";
+import { getStoryFromDB } from "../../utils/indexeddb.js";
+import { getLeaflet } from "../../utils/map.js";
 
 export default class StoryDetailPage {
   constructor() {
@@ -8,11 +8,10 @@ export default class StoryDetailPage {
   }
 
   async render() {
-    // Get story ID from URL hash
     const hash = window.location.hash;
     const match = hash.match(/#\/story\/([^\/]+)/);
     if (!match) {
-      return '<p>Invalid story URL</p>';
+      return "<p>Invalid story URL</p>";
     }
     this.storyId = match[1];
 
@@ -29,25 +28,22 @@ export default class StoryDetailPage {
   }
 
   async afterRender() {
-    const backBtn = document.getElementById('back-btn');
-    const storyContent = document.getElementById('story-content');
+    const backBtn = document.getElementById("back-btn");
+    const storyContent = document.getElementById("story-content");
 
-    backBtn.addEventListener('click', () => {
-      window.location.hash = '#/stories';
+    backBtn.addEventListener("click", () => {
+      window.location.hash = "#/stories";
     });
 
     try {
       let story = null;
-
-      // Try to get from API first
       try {
         const stories = await getStories();
-        story = stories.find(s => s.id === this.storyId);
+        story = stories.find((s) => s.id === this.storyId);
       } catch (error) {
-        console.log('API not available, trying IndexedDB');
+        console.log("API not available, trying IndexedDB");
       }
 
-      // Fallback to IndexedDB
       if (!story) {
         story = await getStoryFromDB(this.storyId);
       }
@@ -56,11 +52,11 @@ export default class StoryDetailPage {
         storyContent.innerHTML = this.#renderStory(story);
         this.#initializeMap(story);
       } else {
-        storyContent.innerHTML = '<p>Story not found</p>';
+        storyContent.innerHTML = "<p>Story not found</p>";
       }
     } catch (error) {
-      console.error('Error loading story:', error);
-      storyContent.innerHTML = '<p>Error loading story</p>';
+      console.error("Error loading story:", error);
+      storyContent.innerHTML = "<p>Error loading story</p>";
     }
   }
 
@@ -70,26 +66,38 @@ export default class StoryDetailPage {
         <header class="story-header">
           <h1>${story.name}</h1>
           <div class="story-meta">
-            <time datetime="${story.createdAt}">${new Date(story.createdAt).toLocaleDateString()}</time>
-            ${story.synced === false ? '<span class="badge offline">Offline</span>' : ''}
+            <time datetime="${story.createdAt}">${new Date(
+      story.createdAt
+    ).toLocaleDateString()}</time>
+            ${
+              story.synced === false
+                ? '<span class="badge offline">Offline</span>'
+                : ""
+            }
           </div>
         </header>
 
         <div class="story-image-container">
-          <img src="${story.photoUrl}" alt="${story.name}'s story" class="story-detail-image">
+          <img src="${story.photoUrl}" alt="${
+      story.name
+    }'s story" class="story-detail-image">
         </div>
 
         <div class="story-description">
           <p>${story.description}</p>
         </div>
 
-        ${story.lat && story.lon ? `
+        ${
+          story.lat && story.lon
+            ? `
           <div class="story-location">
             <h3>Location</h3>
             <div id="story-map" class="story-map"></div>
             <p class="coordinates">Coordinates: ${story.lat}, ${story.lon}</p>
           </div>
-        ` : ''}
+        `
+            : ""
+        }
       </article>
     `;
   }
@@ -97,33 +105,38 @@ export default class StoryDetailPage {
   async #initializeMap(story) {
     if (!story.lat || !story.lon) return;
 
-    const mapElement = document.getElementById('story-map');
+    const mapElement = document.getElementById("story-map");
     if (!mapElement) return;
 
-    mapElement.style.height = '300px';
-    mapElement.style.width = '100%';
+    mapElement.style.height = "300px";
+    mapElement.style.width = "100%";
 
     try {
       const L = getLeaflet();
 
-      const map = L.map('story-map').setView([story.lat, story.lon], 15);
+      const map = L.map("story-map").setView([story.lat, story.lon], 15);
 
-      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-      });
+      const osmLayer = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          attribution: "© OpenStreetMap contributors",
+          maxZoom: 19,
+        }
+      );
 
       osmLayer.addTo(map);
 
       const marker = L.marker([story.lat, story.lon]).addTo(map);
-      marker.bindPopup(`<strong>${story.name}</strong><br>${story.description}`);
+      marker.bindPopup(
+        `<strong>${story.name}</strong><br>${story.description}`
+      );
 
       setTimeout(() => {
         map.invalidateSize();
       }, 100);
     } catch (error) {
-      console.error('Error initializing map:', error);
-      mapElement.innerHTML = '<p>Error loading map</p>';
+      console.error("Error initializing map:", error);
+      mapElement.innerHTML = "<p>Error loading map</p>";
     }
   }
 }

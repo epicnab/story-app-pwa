@@ -1,20 +1,20 @@
-import { getStories, deleteStory } from '../../data/api.js';
-import { getLeaflet } from '../../utils/map.js';
+import { getStories, deleteStory } from "../../data/api.js";
+import { getLeaflet } from "../../utils/map.js";
 import {
   getStoriesFromDB,
   addStoryToDB,
   deleteStoryFromDB,
   getUnsyncedStories,
   markStoryAsSynced,
-  initDB
-} from '../../utils/indexeddb.js';
+  initDB,
+} from "../../utils/indexeddb.js";
 
 export default class StoriesPage {
   #stories = [];
   #filteredStories = [];
-  #currentSort = 'newest';
-  #currentFilter = 'all';
-  #searchQuery = '';
+  #currentSort = "newest";
+  #currentFilter = "all";
+  #searchQuery = "";
 
   async render() {
     return `
@@ -63,129 +63,113 @@ export default class StoriesPage {
   }
 
   async afterRender() {
-    // Initialize IndexedDB
     try {
       await initDB();
     } catch (error) {
-      console.error('Failed to initialize IndexedDB:', error);
+      console.error("Failed to initialize IndexedDB:", error);
     }
 
-    const addButton = document.getElementById('add-story-btn');
-    const listViewBtn = document.getElementById('list-view-btn');
-    const mapViewBtn = document.getElementById('map-view-btn');
-    const listView = document.getElementById('list-view');
-    const mapView = document.getElementById('map-view');
-    const loading = document.getElementById('loading');
+    const addButton = document.getElementById("add-story-btn");
+    const listViewBtn = document.getElementById("list-view-btn");
+    const mapViewBtn = document.getElementById("map-view-btn");
+    const listView = document.getElementById("list-view");
+    const mapView = document.getElementById("map-view");
+    const loading = document.getElementById("loading");
 
-    // Search and filter controls
-    const searchInput = document.getElementById('search-input');
-    const clearSearchBtn = document.getElementById('clear-search');
-    const filterSelect = document.getElementById('filter-select');
-    const sortSelect = document.getElementById('sort-select');
-    const syncBtn = document.getElementById('sync-btn');
-    const syncStatus = document.getElementById('sync-status');
+    const searchInput = document.getElementById("search-input");
+    const clearSearchBtn = document.getElementById("clear-search");
+    const filterSelect = document.getElementById("filter-select");
+    const sortSelect = document.getElementById("sort-select");
+    const syncBtn = document.getElementById("sync-btn");
+    const syncStatus = document.getElementById("sync-status");
 
-    addButton.addEventListener('click', () => {
-      window.location.hash = '#/add-story';
+    addButton.addEventListener("click", () => {
+      window.location.hash = "#/add-story";
     });
 
-    listViewBtn.addEventListener('click', () => {
-      listView.style.display = 'block';
-      mapView.style.display = 'none';
-      listViewBtn.classList.add('active');
-      mapViewBtn.classList.remove('active');
+    listViewBtn.addEventListener("click", () => {
+      listView.style.display = "block";
+      mapView.style.display = "none";
+      listViewBtn.classList.add("active");
+      mapViewBtn.classList.remove("active");
     });
 
-    mapViewBtn.addEventListener('click', () => {
-      listView.style.display = 'none';
-      mapView.style.display = 'block';
-      mapViewBtn.classList.add('active');
-      listViewBtn.classList.remove('active');
+    mapViewBtn.addEventListener("click", () => {
+      listView.style.display = "none";
+      mapView.style.display = "block";
+      mapViewBtn.classList.add("active");
+      listViewBtn.classList.remove("active");
       this.#initializeMap();
     });
 
-    // Search functionality
-    searchInput.addEventListener('input', (e) => {
+    searchInput.addEventListener("input", (e) => {
       this.#searchQuery = e.target.value.toLowerCase();
       this.#applyFiltersAndSort();
     });
 
-    clearSearchBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      this.#searchQuery = '';
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      this.#searchQuery = "";
       this.#applyFiltersAndSort();
     });
 
-    // Filter functionality
-    filterSelect.addEventListener('change', (e) => {
+    filterSelect.addEventListener("change", (e) => {
       this.#currentFilter = e.target.value;
       this.#applyFiltersAndSort();
     });
 
-    // Sort functionality
-    sortSelect.addEventListener('change', (e) => {
+    sortSelect.addEventListener("change", (e) => {
       this.#currentSort = e.target.value;
       this.#applyFiltersAndSort();
     });
 
-    // Sync functionality
-    syncBtn.addEventListener('click', async () => {
+    syncBtn.addEventListener("click", async () => {
       await this.#syncOfflineData(syncStatus);
     });
 
-    // Load stories
     try {
       await this.#loadStories();
     } catch (error) {
       loading.textContent = `Error loading stories: ${error.message}`;
-      loading.className = 'error';
+      loading.className = "error";
     }
 
-    // Listen for sync completion events
-    window.addEventListener('syncCompleted', (event) => {
+    window.addEventListener("syncCompleted", (event) => {
       const { syncedCount, errorCount } = event.detail;
       if (syncedCount > 0) {
-        // Reload stories to reflect synced data
         this.#loadStories();
       }
     });
   }
 
   async #loadStories() {
-    const loading = document.getElementById('loading');
+    const loading = document.getElementById("loading");
 
     try {
-      // Load online stories
       const onlineStories = await getStories();
 
-      // Load offline stories
       const offlineStories = await getStoriesFromDB();
 
-      // Merge stories (online takes precedence for duplicates)
       const storyMap = new Map();
 
-      // Add offline stories first
-      offlineStories.forEach(story => {
-        storyMap.set(story.id, { ...story, source: 'offline' });
+      offlineStories.forEach((story) => {
+        storyMap.set(story.id, { ...story, source: "offline" });
       });
 
-      // Add/update with online stories
-      onlineStories.forEach(story => {
-        storyMap.set(story.id, { ...story, source: 'online', synced: true });
+      onlineStories.forEach((story) => {
+        storyMap.set(story.id, { ...story, source: "online", synced: true });
       });
 
       this.#stories = Array.from(storyMap.values());
       this.#applyFiltersAndSort();
-
     } catch (error) {
-      console.error('Error loading stories:', error);
-      // Try to load from IndexedDB as fallback
+      console.error("Error loading stories:", error);
       try {
         this.#stories = await getStoriesFromDB();
         this.#applyFiltersAndSort();
       } catch (dbError) {
         loading.textContent = `Error loading stories: ${error.message}`;
-        loading.className = 'error';
+        loading.className = "error";
       }
     }
   }
@@ -193,29 +177,27 @@ export default class StoriesPage {
   #applyFiltersAndSort() {
     let filtered = [...this.#stories];
 
-    // Apply search filter
     if (this.#searchQuery) {
-      filtered = filtered.filter(story =>
-        story.name.toLowerCase().includes(this.#searchQuery) ||
-        story.description.toLowerCase().includes(this.#searchQuery)
+      filtered = filtered.filter(
+        (story) =>
+          story.name.toLowerCase().includes(this.#searchQuery) ||
+          story.description.toLowerCase().includes(this.#searchQuery)
       );
     }
 
-    // Apply sync filter
-    if (this.#currentFilter === 'synced') {
-      filtered = filtered.filter(story => story.synced === true);
-    } else if (this.#currentFilter === 'offline') {
-      filtered = filtered.filter(story => story.synced === false);
+    if (this.#currentFilter === "synced") {
+      filtered = filtered.filter((story) => story.synced === true);
+    } else if (this.#currentFilter === "offline") {
+      filtered = filtered.filter((story) => story.synced === false);
     }
 
-    // Apply sorting
     filtered.sort((a, b) => {
       switch (this.#currentSort) {
-        case 'oldest':
+        case "oldest":
           return new Date(a.createdAt) - new Date(b.createdAt);
-        case 'name':
+        case "name":
           return a.name.localeCompare(b.name);
-        case 'newest':
+        case "newest":
         default:
           return new Date(b.createdAt) - new Date(a.createdAt);
       }
@@ -226,17 +208,27 @@ export default class StoriesPage {
   }
 
   #renderFilteredStoriesList() {
-    const listContainer = document.getElementById('list-view');
-    const storiesHtml = this.#filteredStories.map(story => `
+    const listContainer = document.getElementById("list-view");
+    const storiesHtml = this.#filteredStories
+      .map(
+        (story) => `
       <article class="story-card" data-story-id="${story.id}">
-        <img src="${story.photoUrl}" alt="${story.name}'s story" class="story-image">
+        <img src="${story.photoUrl}" alt="${
+          story.name
+        }'s story" class="story-image">
         <div class="story-content">
           <div class="story-header">
             <h2>${story.name}</h2>
             <div class="story-badges">
-              ${story.synced === false ? '<span class="badge offline">Offline</span>' : '<span class="badge synced">Synced</span>'}
+              ${
+                story.synced === false
+                  ? '<span class="badge offline">Offline</span>'
+                  : '<span class="badge synced">Synced</span>'
+              }
             </div>
-            <button class="delete-story-btn" data-story-id="${story.id}" aria-label="Delete story">
+            <button class="delete-story-btn" data-story-id="${
+              story.id
+            }" aria-label="Delete story">
               <i data-lucide="trash-2" class="delete-icon"></i>
             </button>
           </div>
@@ -246,26 +238,28 @@ export default class StoriesPage {
           </time>
         </div>
       </article>
-    `).join('');
+    `
+      )
+      .join("");
 
-    listContainer.innerHTML = storiesHtml || '<p>No stories found.</p>';
+    listContainer.innerHTML = storiesHtml || "<p>No stories found.</p>";
 
     this.#setupDeleteHandlers();
   }
 
   async #syncOfflineData(syncStatus) {
     try {
-      syncStatus.textContent = 'Syncing offline data...';
-      syncStatus.className = 'sync-status syncing';
+      syncStatus.textContent = "Syncing offline data...";
+      syncStatus.className = "sync-status syncing";
 
       const unsyncedStories = await getUnsyncedStories();
 
       if (unsyncedStories.length === 0) {
-        syncStatus.textContent = 'All data is already synced!';
-        syncStatus.className = 'sync-status success';
+        syncStatus.textContent = "All data is already synced!";
+        syncStatus.className = "sync-status success";
         setTimeout(() => {
-          syncStatus.textContent = '';
-          syncStatus.className = 'sync-status';
+          syncStatus.textContent = "";
+          syncStatus.className = "sync-status";
         }, 3000);
         return;
       }
@@ -275,55 +269,58 @@ export default class StoriesPage {
 
       for (const story of unsyncedStories) {
         try {
-          // Try to sync with API (you would implement this based on your API)
-          // For now, we'll just mark as synced
           await markStoryAsSynced(story.id);
           syncedCount++;
         } catch (error) {
-          console.error('Failed to sync story:', story.id, error);
+          console.error("Failed to sync story:", story.id, error);
           errorCount++;
         }
       }
 
       if (syncedCount > 0) {
-        // Reload stories to reflect changes
         await this.#loadStories();
       }
 
-      syncStatus.textContent = `Synced ${syncedCount} stories${errorCount > 0 ? ` (${errorCount} failed)` : ''}`;
-      syncStatus.className = errorCount === 0 ? 'sync-status success' : 'sync-status warning';
+      syncStatus.textContent = `Synced ${syncedCount} stories${
+        errorCount > 0 ? ` (${errorCount} failed)` : ""
+      }`;
+      syncStatus.className =
+        errorCount === 0 ? "sync-status success" : "sync-status warning";
 
       setTimeout(() => {
-        syncStatus.textContent = '';
-        syncStatus.className = 'sync-status';
+        syncStatus.textContent = "";
+        syncStatus.className = "sync-status";
       }, 5000);
-
     } catch (error) {
-      console.error('Sync failed:', error);
-      syncStatus.textContent = 'Sync failed. Please try again.';
-      syncStatus.className = 'sync-status error';
+      console.error("Sync failed:", error);
+      syncStatus.textContent = "Sync failed. Please try again.";
+      syncStatus.className = "sync-status error";
 
       setTimeout(() => {
-        syncStatus.textContent = '';
-        syncStatus.className = 'sync-status';
+        syncStatus.textContent = "";
+        syncStatus.className = "sync-status";
       }, 5000);
     }
   }
 
   #setupDeleteHandlers() {
-    const deleteButtons = document.querySelectorAll('.delete-story-btn');
-    deleteButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
+    const deleteButtons = document.querySelectorAll(".delete-story-btn");
+    deleteButtons.forEach((button) => {
+      button.addEventListener("click", async (e) => {
         e.preventDefault();
         const storyId = button.dataset.storyId;
 
-        if (confirm('Are you sure you want to delete this story? This action cannot be undone.')) {
+        if (
+          confirm(
+            "Are you sure you want to delete this story? This action cannot be undone."
+          )
+        ) {
           try {
-            // Try to delete from API first
             await deleteStory(storyId);
-            // If successful, also delete from IndexedDB
             await deleteStoryFromDB(storyId);
-            this.#stories = this.#stories.filter(story => story.id !== storyId);
+            this.#stories = this.#stories.filter(
+              (story) => story.id !== storyId
+            );
             this.#applyFiltersAndSort();
           } catch (error) {
             alert(`Failed to delete story: ${error.message}`);
@@ -338,7 +335,7 @@ export default class StoriesPage {
   }
 
   async #initializeMap() {
-    const mapElement = document.getElementById('map');
+    const mapElement = document.getElementById("map");
     if (!mapElement || mapElement._leaflet_id) {
       return;
     }
@@ -346,34 +343,44 @@ export default class StoriesPage {
     try {
       const L = getLeaflet();
 
-      const map = L.map('map').setView([-6.2, 106.816666], 10); 
+      const map = L.map("map").setView([-6.2, 106.816666], 10);
 
-      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-      });
+      const osmLayer = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          attribution: "© OpenStreetMap contributors",
+          maxZoom: 19,
+        }
+      );
 
-      const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '© Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-        maxZoom: 19
-      });
+      const satelliteLayer = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          attribution:
+            "© Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+          maxZoom: 19,
+        }
+      );
 
-      const terrainLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenTopoMap contributors',
-        maxZoom: 17
-      });
+      const terrainLayer = L.tileLayer(
+        "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        {
+          attribution: "© OpenTopoMap contributors",
+          maxZoom: 17,
+        }
+      );
 
       const baseLayers = {
-        "OpenStreetMap": osmLayer,
-        "Satellite": satelliteLayer,
-        "Terrain": terrainLayer
+        OpenStreetMap: osmLayer,
+        Satellite: satelliteLayer,
+        Terrain: terrainLayer,
       };
 
       osmLayer.addTo(map);
 
       L.control.layers(baseLayers).addTo(map);
 
-      this.#stories.forEach(story => {
+      this.#stories.forEach((story) => {
         if (story.lat && story.lon) {
           const marker = L.marker([story.lat, story.lon]).addTo(map);
           marker.bindPopup(`
@@ -388,8 +395,8 @@ export default class StoriesPage {
 
       if (this.#stories.length > 0) {
         const bounds = this.#stories
-          .filter(story => story.lat && story.lon)
-          .map(story => [story.lat, story.lon]);
+          .filter((story) => story.lat && story.lon)
+          .map((story) => [story.lat, story.lon]);
         if (bounds.length > 0) {
           map.fitBounds(bounds);
         }
@@ -398,10 +405,9 @@ export default class StoriesPage {
       setTimeout(() => {
         map.invalidateSize();
       }, 100);
-
     } catch (error) {
-      console.error('Error initializing map:', error);
-      mapElement.innerHTML = '<p>Error loading map. Please try again.</p>';
+      console.error("Error initializing map:", error);
+      mapElement.innerHTML = "<p>Error loading map. Please try again.</p>";
     }
   }
 }

@@ -1,4 +1,4 @@
-import { loginUser } from '../../../data/api.js';
+import { loginUser } from "../../../data/api.js";
 
 export default class LoginPage {
   async render() {
@@ -25,29 +25,29 @@ export default class LoginPage {
   }
 
   async afterRender() {
-    const form = document.getElementById('login-form');
-    const messageDiv = document.getElementById('login-message');
+    const form = document.getElementById("login-form");
+    const messageDiv = document.getElementById("login-message");
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      messageDiv.textContent = 'Logging in...';
+      messageDiv.textContent = "Logging in...";
 
       const formData = new FormData(form);
       const userData = {
-        email: formData.get('email'),
-        password: formData.get('password'),
+        email: formData.get("email"),
+        password: formData.get("password"),
       };
 
       try {
         await loginUser(userData);
-        messageDiv.textContent = 'Login successful! Redirecting...';
-        messageDiv.className = 'message success';
+        messageDiv.textContent = "Login successful! Redirecting...";
+        messageDiv.className = "message success";
         setTimeout(() => {
-          window.location.hash = '#/stories';
+          window.location.hash = "#/stories";
         }, 1000);
       } catch (error) {
         messageDiv.textContent = error.message;
-        messageDiv.className = 'message error';
+        messageDiv.className = "message error";
       }
     });
   }

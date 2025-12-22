@@ -1,4 +1,4 @@
-import { registerUser } from '../../../data/api.js';
+import { registerUser } from "../../../data/api.js";
 
 export default class RegisterPage {
   async render() {
@@ -29,30 +29,30 @@ export default class RegisterPage {
   }
 
   async afterRender() {
-    const form = document.getElementById('register-form');
-    const messageDiv = document.getElementById('register-message');
+    const form = document.getElementById("register-form");
+    const messageDiv = document.getElementById("register-message");
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      messageDiv.textContent = 'Registering...';
+      messageDiv.textContent = "Registering...";
 
       const formData = new FormData(form);
       const userData = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        password: formData.get('password'),
+        name: formData.get("name"),
+        email: formData.get("email"),
+        password: formData.get("password"),
       };
 
       try {
         await registerUser(userData);
-        messageDiv.textContent = 'Registration successful! Please login.';
-        messageDiv.className = 'message success';
+        messageDiv.textContent = "Registration successful! Please login.";
+        messageDiv.className = "message success";
         setTimeout(() => {
-          window.location.hash = '#/login';
+          window.location.hash = "#/login";
         }, 2000);
       } catch (error) {
         messageDiv.textContent = error.message;
-        messageDiv.className = 'message error';
+        messageDiv.className = "message error";
       }
     });
   }

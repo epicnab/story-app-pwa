@@ -1,4 +1,4 @@
-import CONFIG from '../config';
+import CONFIG from "../config";
 
 const ENDPOINTS = {
   STORIES: `${CONFIG.BASE_URL}/stories`,
@@ -8,30 +8,30 @@ const ENDPOINTS = {
 
 export async function getStories() {
   const headers = {};
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(ENDPOINTS.STORIES, { headers });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || 'Failed to fetch stories');
+    throw new Error(data.message || "Failed to fetch stories");
   }
   return data.listStory || [];
 }
 
 export async function addStory(storyData) {
   const response = await fetch(ENDPOINTS.STORIES, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
     body: storyData,
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || 'Failed to add story');
+    throw new Error(data.message || "Failed to add story");
   }
   return data;
 }
@@ -46,10 +46,10 @@ export async function deleteStory(storyId) {
   for (const endpoint of endpoints) {
     try {
       const response = await fetch(endpoint, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id: storyId }),
       });
@@ -58,16 +58,15 @@ export async function deleteStory(storyId) {
         const data = await response.json();
         return data;
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   try {
     const response = await fetch(`${ENDPOINTS.STORIES}/delete`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ id: storyId }),
     });
@@ -76,41 +75,40 @@ export async function deleteStory(storyId) {
       const data = await response.json();
       return data;
     }
-  } catch (error) {
-  }
+  } catch (error) {}
 
-  throw new Error('Delete operation not supported by this API');
+  throw new Error("Delete operation not supported by this API");
 }
 
 export async function registerUser(userData) {
   const response = await fetch(ENDPOINTS.REGISTER, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(userData),
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || 'Failed to register');
+    throw new Error(data.message || "Failed to register");
   }
   return data;
 }
 
 export async function loginUser(userData) {
   const response = await fetch(ENDPOINTS.LOGIN, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(userData),
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || 'Failed to login');
+    throw new Error(data.message || "Failed to login");
   }
   if (data.loginResult?.token) {
-    localStorage.setItem('token', data.loginResult.token);
+    localStorage.setItem("token", data.loginResult.token);
   }
   return data;
 }

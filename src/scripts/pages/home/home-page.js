@@ -63,32 +63,29 @@ export default class HomePage {
       window.lucide.createIcons();
     }
 
-    // Initialize push notification toggle
     this.initPushNotificationToggle();
   }
 
   async initPushNotificationToggle() {
-    const toggle = document.getElementById('push-notification-toggle');
-    const status = document.getElementById('push-status');
+    const toggle = document.getElementById("push-notification-toggle");
+    const status = document.getElementById("push-status");
 
     if (!toggle || !status) return;
 
-    // Import push notification functions
-    const { isPushNotificationEnabled, togglePushNotification } = await import('../../utils/push-notification.js');
+    const { isPushNotificationEnabled, togglePushNotification } = await import(
+      "../../utils/push-notification.js"
+    );
 
-    // Set initial state
     toggle.checked = isPushNotificationEnabled();
-    status.textContent = toggle.checked ? 'Enabled' : 'Disabled';
+    status.textContent = toggle.checked ? "Enabled" : "Disabled";
 
-    // Handle toggle change
-    toggle.addEventListener('change', async () => {
+    toggle.addEventListener("change", async () => {
       try {
         const isEnabled = await togglePushNotification();
         toggle.checked = isEnabled;
-        status.textContent = isEnabled ? 'Enabled' : 'Disabled';
+        status.textContent = isEnabled ? "Enabled" : "Disabled";
       } catch (error) {
-        console.error('Failed to toggle push notifications:', error);
-        // Reset toggle state
+        console.error("Failed to toggle push notifications:", error);
         toggle.checked = !toggle.checked;
       }
     });

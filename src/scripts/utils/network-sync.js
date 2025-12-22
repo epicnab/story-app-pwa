@@ -74,6 +74,10 @@ export async function syncOfflineData() {
   }
 }
 
-if (isOnline) {
-  setTimeout(syncOfflineData, 1000);
+export function startNetworkSync() {
+  if (isOnline) {
+    setTimeout(syncOfflineData, 1000);
+  }
 }
+
+// Remove automatic sync on startup - only sync when explicitly requested

@@ -6,8 +6,9 @@ let isPushEnabled = false;
 export async function initPushNotification() {
   if ("serviceWorker" in navigator && "PushManager" in window) {
     try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      console.log("Service Worker registered successfully:", registration);
+      // Wait for service worker to be ready (registered by VitePWA)
+      const registration = await navigator.serviceWorker.ready;
+      console.log("Service Worker ready for push notifications:", registration);
 
       if (!("showNotification" in ServiceWorkerRegistration.prototype)) {
         console.warn("Notifications aren't supported.");
@@ -27,7 +28,7 @@ export async function initPushNotification() {
         console.log("Message from service worker:", event.data);
       });
     } catch (error) {
-      console.error("Service Worker registration failed:", error);
+      console.error("Service Worker initialization failed:", error);
     }
   } else {
     console.warn("Service workers or Push messaging aren't supported.");

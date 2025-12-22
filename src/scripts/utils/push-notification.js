@@ -2,6 +2,7 @@ import CONFIG from "../config.js";
 
 let pushSubscription = null;
 let isPushEnabled = false;
+let vapidKey = null;
 
 export async function initPushNotification() {
   try {
@@ -45,6 +46,27 @@ export async function initPushNotification() {
   }
 }
 
+async function fetchVAPIDKey() {
+  try {
+    const response = await fetch(`${CONFIG.BASE_URL}/push-keys`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch VAPID key");
+    }
+
+    const data = await response.json();
+    return data.vapidPublicKey || data.publicKey;
+  } catch (error) {
+    console.error("Failed to fetch VAPID key:", error);
+    throw error;
+  }
+}
+
 async function subscribeToPush() {
   try {
     const registration = await navigator.serviceWorker.ready;
@@ -61,9 +83,14 @@ async function subscribeToPush() {
       return;
     }
 
+    // Fetch VAPID key from API
+    if (!vapidKey) {
+      vapidKey = await fetchVAPIDKey();
+    }
+
     pushSubscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(CONFIG.VAPID_PUBLIC_KEY),
+      applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
 
     console.log("Push notification subscription:", pushSubscription);

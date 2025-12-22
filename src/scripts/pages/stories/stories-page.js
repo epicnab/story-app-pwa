@@ -32,6 +32,7 @@ export default class StoriesPage {
           <div class="stories-filters">
             <div class="filter-controls">
               <div class="search-box">
+                <label for="search-input" class="sr-only">Search stories</label>
                 <input type="text" id="search-input" placeholder="Search stories..." aria-label="Search stories">
                 <button id="clear-search" class="clear-search-btn" aria-label="Clear search">×</button>
               </div>

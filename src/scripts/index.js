@@ -1,7 +1,6 @@
 import "../styles/styles.css";
 
 import App from "./pages/app";
-import { initPushNotification } from "./utils/push-notification.js";
 import "./utils/network-sync.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -15,6 +14,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("hashchange", async () => {
     await app.renderPage();
   });
-
-  initPushNotification();
 });

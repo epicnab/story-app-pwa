@@ -63,6 +63,10 @@ export default class HomePage {
       window.lucide.createIcons();
     }
 
+    // Initialize push notifications for this page
+    const { initPushNotification } = await import("../../utils/push-notification.js");
+    await initPushNotification();
+
     this.initPushNotificationToggle();
   }
 

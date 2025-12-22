@@ -1110,6 +1110,33 @@ input:checked + .slider:before {
   margin-left: 10px;
 }
 
+/* PWA Install Button Styles */
+.install-button {
+  padding: 12px 20px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+  width: fit-content;
+}
+
+.install-button:hover,
+.install-button:focus {
+  background-color: #059669;
+}
+
+.button-icon {
+  width: 16px;
+  height: 16px;
+}
+
 @media screen and (min-width: 1000px) {
   .navigation-drawer {
     min-height: auto;

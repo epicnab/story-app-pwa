@@ -28,6 +28,14 @@ export default class HomePage {
                 <span class="toggle-status" id="push-status">Disabled</span>
               </div>
             </div>
+            <div class="setting-card" id="pwa-install-card" style="display: none;">
+              <h3><i data-lucide="download" class="setting-icon"></i> Install App</h3>
+              <p>Install this app on your device for a better experience.</p>
+              <button class="install-button" id="install-button">
+                <i data-lucide="smartphone" class="button-icon"></i>
+                Install App
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -67,7 +75,12 @@ export default class HomePage {
     const { initPushNotification } = await import("../../utils/push-notification.js");
     await initPushNotification();
 
+    // Initialize PWA install functionality
+    const { initPWAInstall, canInstallPWA, showInstallPrompt } = await import("../../utils/pwa-install.js");
+    initPWAInstall();
+
     this.initPushNotificationToggle();
+    this.initPWAInstall();
   }
 
   async initPushNotificationToggle() {
@@ -92,6 +105,45 @@ export default class HomePage {
         console.error("Failed to toggle push notifications:", error);
         toggle.checked = !toggle.checked;
       }
+    });
+  }
+
+  async initPWAInstall() {
+    const installCard = document.getElementById("pwa-install-card");
+    const installButton = document.getElementById("install-button");
+
+    if (!installCard || !installButton) return;
+
+    const { canInstallPWA, showInstallPrompt, isPWAInstallable } = await import("../../utils/pwa-install.js");
+
+    // Check if PWA can be installed
+    if (canInstallPWA()) {
+      installCard.style.display = "block";
+    }
+
+    // Listen for PWA install availability
+    window.addEventListener('pwa-installable', (event) => {
+      if (event.detail.installable) {
+        installCard.style.display = "block";
+      }
+    });
+
+    // Handle install button click
+    installButton.addEventListener("click", async () => {
+      try {
+        const installed = await showInstallPrompt();
+        if (installed) {
+          installCard.style.display = "none";
+          console.log("PWA installed successfully");
+        }
+      } catch (error) {
+        console.error("Failed to install PWA:", error);
+      }
+    });
+
+    // Hide install card after successful installation
+    window.addEventListener('pwa-installed', () => {
+      installCard.style.display = "none";
     });
   }
 }

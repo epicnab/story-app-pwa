@@ -3,6 +3,7 @@ import CONFIG from "../config.js";
 let pushSubscription = null;
 let isPushEnabled = false;
 let vapidKey = null;
+let deferredPrompt = null;
 
 export async function initPushNotification() {
   try {
@@ -20,6 +21,14 @@ export async function initPushNotification() {
     if (!("showNotification" in ServiceWorkerRegistration.prototype)) {
       console.warn("Notifications aren't supported.");
       return;
+    }
+
+    // Check for existing subscription
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      console.log("Existing push subscription found");
+      pushSubscription = existingSubscription;
+      isPushEnabled = true;
     }
 
     // Handle notification permission
@@ -135,6 +144,18 @@ export async function togglePushNotification() {
   if (isPushEnabled) {
     await unsubscribeFromPush();
   } else {
+    // Request permission first
+    if (Notification.permission === "default") {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        console.warn("Notification permission denied");
+        return false;
+      }
+    } else if (Notification.permission === "denied") {
+      console.warn("Notification permission was denied previously");
+      return false;
+    }
+
     await subscribeToPush();
   }
   return isPushEnabled;

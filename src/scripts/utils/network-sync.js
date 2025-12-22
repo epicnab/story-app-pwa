@@ -80,4 +80,3 @@ export function startNetworkSync() {
   }
 }
 
-// Remove automatic sync on startup - only sync when explicitly requested

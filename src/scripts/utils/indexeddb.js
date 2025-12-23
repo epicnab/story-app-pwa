@@ -1,86 +1,69 @@
-const DB_NAME = "StoryAppDB";
-const DB_VERSION = 2; // ⬅️ NAIKKAN VERSION
-const STORIES_STORE = "stories";
-const SYNC_STORE = "syncQueue";
+import { openDB } from "idb";
+
+const DB_NAME = "story-app-db";
+const DB_VERSION = 1;
+const STORE_NAME = "stories";
+
+let dbPromise = null;
 
 export async function initDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-
-      if (db.objectStoreNames.contains(STORIES_STORE)) {
-        db.deleteObjectStore(STORIES_STORE);
-      }
-
-      const storiesStore = db.createObjectStore(STORIES_STORE, {
-        keyPath: "id",
-      });
-
-      storiesStore.createIndex("synced", "synced", { unique: false });
-      storiesStore.createIndex("createdAt", "createdAt", { unique: false });
-
-      if (!db.objectStoreNames.contains(SYNC_STORE)) {
-        const syncStore = db.createObjectStore(SYNC_STORE, {
-          keyPath: "id",
-          autoIncrement: true,
-        });
-        syncStore.createIndex("type", "type", { unique: false });
-      }
-    };
-  });
+  if (!dbPromise) {
+    dbPromise = openDB(DB_NAME, DB_VERSION, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          const store = db.createObjectStore(STORE_NAME, {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          store.createIndex("synced", "synced");
+        }
+      },
+    });
+  }
+  return dbPromise;
 }
 
-async function getDB() {
-  return await initDB();
-}
-
+/* ======================
+   CREATE
+====================== */
 export async function addStoryToDB(story) {
-  const db = await getDB();
-  const tx = db.transaction(STORIES_STORE, "readwrite");
-  const store = tx.objectStore(STORIES_STORE);
-
-  const data = {
-    id: `offline_${Date.now()}`,
-    description: story.description,
-    lat: story.lat,
-    lon: story.lon,
-
-    // 🔥 INI YANG PENTING
-    photoBlob: story.photo,
-    photoType: story.photo.type,
-
+  const db = await initDB();
+  return db.add(STORE_NAME, {
+    ...story,
     synced: false,
     createdAt: new Date().toISOString(),
-  };
-
-  store.add(data);
-  return data;
+  });
 }
 
-export async function getUnsyncedStories() {
-  const db = await getDB();
-  const tx = db.transaction(STORIES_STORE, "readonly");
-  const store = tx.objectStore(STORIES_STORE);
-  const index = store.index("synced");
+/* ======================
+   READ (INI YANG ERROR)
+====================== */
+export async function getStoriesFromDB() {
+  const db = await initDB();
+  return db.getAll(STORE_NAME);
+}
 
-  return new Promise((resolve) => {
-    index.getAll(IDBKeyRange.only(false)).onsuccess = (e) =>
-      resolve(e.target.result || []);
-  });
+/* ======================
+   DELETE
+====================== */
+export async function deleteStoryFromDB(id) {
+  const db = await initDB();
+  return db.delete(STORE_NAME, id);
+}
+
+/* ======================
+   SYNC HELPERS
+====================== */
+export async function getUnsyncedStories() {
+  const db = await initDB();
+  return db.getAllFromIndex(STORE_NAME, "synced", false);
 }
 
 export async function markStoryAsSynced(id) {
-  const db = await getDB();
-  const tx = db.transaction(STORIES_STORE, "readwrite");
-  const store = tx.objectStore(STORIES_STORE);
-
-  const story = await store.get(id);
-  story.synced = true;
-  store.put(story);
+  const db = await initDB();
+  const story = await db.get(STORE_NAME, id);
+  if (story) {
+    story.synced = true;
+    await db.put(STORE_NAME, story);
+  }
 }

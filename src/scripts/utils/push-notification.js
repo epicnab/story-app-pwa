@@ -2,77 +2,48 @@ import CONFIG from "../config.js";
 
 let pushSubscription = null;
 let isPushEnabled = false;
-let vapidKey = null;
-let deferredPrompt = null;
+
+const VAPID_PUBLIC_KEY =
+  "BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk";
 
 export async function initPushNotification() {
   try {
-    // Check basic requirements
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       console.warn("Push notifications not supported in this browser");
       return;
     }
 
-    // Wait for service worker to be ready (registered by VitePWA)
     const registration = await navigator.serviceWorker.ready;
     console.log("Service Worker ready for push notifications:", registration);
 
-    // Check notification support
     if (!("showNotification" in ServiceWorkerRegistration.prototype)) {
       console.warn("Notifications aren't supported.");
       return;
     }
 
-    // Check for existing subscription
-    const existingSubscription = await registration.pushManager.getSubscription();
+    const existingSubscription =
+      await registration.pushManager.getSubscription();
     if (existingSubscription) {
       console.log("Existing push subscription found");
       pushSubscription = existingSubscription;
       isPushEnabled = true;
     }
 
-    // Handle notification permission
     if (Notification.permission === "granted") {
       console.log("Notification permission already granted");
-      // Don't auto-subscribe, wait for user interaction
     } else if (Notification.permission === "default") {
       console.log("Notification permission not requested yet");
-      // Don't auto-request, wait for user interaction
     } else {
       console.log("Notification permission denied");
     }
 
-    // Listen for service worker messages
     navigator.serviceWorker.addEventListener("message", (event) => {
       console.log("Message from service worker:", event.data);
     });
 
     console.log("Push notification initialization completed successfully");
-
   } catch (error) {
     console.error("Service Worker initialization failed:", error);
-    // Don't throw error, just log it - push notifications are not critical
-  }
-}
-
-async function fetchVAPIDKey() {
-  try {
-    const response = await fetch(`${CONFIG.BASE_URL}/push-keys`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch VAPID key");
-    }
-
-    const data = await response.json();
-    return data.vapidPublicKey || data.publicKey;
-  } catch (error) {
-    console.error("Failed to fetch VAPID key:", error);
-    throw error;
   }
 }
 
@@ -80,42 +51,30 @@ async function subscribeToPush() {
   try {
     const registration = await navigator.serviceWorker.ready;
 
-    // Check if HTTPS is required for push notifications
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn("Push notifications not supported in this browser");
-      return;
-    }
-
-    // Check if we're on HTTPS (required for push notifications)
-    if (!window.location.protocol.includes('https') && window.location.hostname !== 'localhost') {
+    if (
+      !window.location.protocol.includes("https") &&
+      window.location.hostname !== "localhost"
+    ) {
       console.warn("Push notifications require HTTPS");
       return;
     }
 
-    // Fetch VAPID key from API
-    if (!vapidKey) {
-      vapidKey = await fetchVAPIDKey();
-    }
-
     pushSubscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
     });
 
     console.log("Push notification subscription:", pushSubscription);
     isPushEnabled = true;
 
-    // Send subscription to server (optional, for real push service)
-    await sendSubscriptionToServer(pushSubscription);
-
+    await sendSubscriptionToServer(pushSubscription, "subscribe");
   } catch (error) {
     console.error("Failed to subscribe to push notifications:", error);
     isPushEnabled = false;
 
-    // Show user-friendly error message
-    if (error.name === 'NotAllowedError') {
+    if (error.name === "NotAllowedError") {
       console.warn("Push notifications permission denied by user");
-    } else if (error.name === 'AbortError') {
+    } else if (error.name === "AbortError") {
       console.warn("Push subscription aborted");
     } else {
       console.error("Push notification subscription failed:", error.message);
@@ -126,6 +85,8 @@ async function subscribeToPush() {
 export async function unsubscribeFromPush() {
   try {
     if (pushSubscription) {
+      const endpoint = pushSubscription.endpoint;
+      await sendSubscriptionToServer(endpoint, "unsubscribe");
       await pushSubscription.unsubscribe();
       pushSubscription = null;
       isPushEnabled = false;
@@ -144,7 +105,6 @@ export async function togglePushNotification() {
   if (isPushEnabled) {
     await unsubscribeFromPush();
   } else {
-    // Request permission first
     if (Notification.permission === "default") {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
@@ -174,25 +134,41 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-async function sendSubscriptionToServer(subscription) {
+async function sendSubscriptionToServer(subscription, type) {
   try {
-    const response = await fetch(`${CONFIG.BASE_URL}/push-subscription`, {
-      method: "POST",
+    const endpoint =
+      type === "subscribe"
+        ? `${CONFIG.BASE_URL}/subscribe`
+        : `${CONFIG.BASE_URL}/unsubscribe`;
+    const options = {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify({
-        subscription: subscription.toJSON(),
-      }),
-    });
+    };
 
-    if (!response.ok) {
-      throw new Error("Failed to send subscription to server");
+    if (type === "subscribe") {
+      options.method = "POST";
+      options.body = JSON.stringify(subscription.toJSON());
+    } else if (type === "unsubscribe") {
+      options.method = "DELETE";
+      options.body = JSON.stringify({
+        endpoint: subscription,
+      });
     }
 
-    console.log("Subscription sent to server successfully");
+    const response = await fetch(endpoint, options);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        `Failed to ${type} subscription on server: ${errorData.message}`
+      );
+    }
+
+    console.log(`Subscription ${type}d on server successfully`);
   } catch (error) {
-    console.error("Failed to send subscription to server:", error);
+    console.error(`Failed to ${type} subscription on server:`, error);
   }
 }
+

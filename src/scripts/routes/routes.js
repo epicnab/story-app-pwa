@@ -5,6 +5,7 @@ import RegisterPage from "../pages/auth/register/register-page";
 import StoriesPage from "../pages/stories/stories-page";
 import AddStoryPage from "../pages/add-story/add-story-page";
 import StoryDetailPage from "../pages/story-detail/story-detail-page";
+import OfflineStoriesPage from "../pages/offline-stories/offline-stories-page";
 
 const routes = {
   "/": new HomePage(),
@@ -14,6 +15,7 @@ const routes = {
   "/stories": new StoriesPage(),
   "/add-story": new AddStoryPage(),
   "/story/:id": new StoryDetailPage(),
+  "/offline": new OfflineStoriesPage(),
 };
 
 export default routes;

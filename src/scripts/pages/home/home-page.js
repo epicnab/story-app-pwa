@@ -21,7 +21,7 @@ export default class HomePage {
               <h3><i data-lucide="bell" class="setting-icon"></i> Push Notifications</h3>
               <p>Receive notifications when new stories are added.</p>
               <div class="setting-toggle">
-                <label class="switch">
+                <label for="push-notification-toggle" class="switch">
                   <input type="checkbox" id="push-notification-toggle">
                   <span class="slider round"></span>
                 </label>

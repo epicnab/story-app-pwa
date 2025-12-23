@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  base: "/story-app-pwa/",
+  base: "/",
   root: resolve(__dirname, "src"),
   publicDir: resolve(__dirname, "src", "public"),
   build: {
@@ -18,7 +18,9 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png", "apple-touch-icon.png", "masked-icon.svg"],
+      strategies: "injectManifest",
+      srcDir: "src/public",
+      filename: "sw.js",
       manifest: {
         name: "Story App",
         short_name: "StoryApp",
@@ -31,47 +33,26 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "favicon.png",
+            src: "/images/logo.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "favicon.png",
+            src: "/images/logo.png",
             sizes: "512x512",
             type: "image/png",
           },
-        ],
-        screenshots: [
           {
-            src: "images/logo.png",
-            sizes: "1280x720",
+            src: "/images/logo.png",
+            sizes: "192x192",
             type: "image/png",
-            form_factor: "wide",
+            purpose: "maskable",
           },
-        ],
-        shortcuts: [
           {
-            name: "Add Story",
-            short_name: "Add",
-            description: "Add a new story",
-            url: "/#/add-story",
-            icons: [{ src: "favicon.png", sizes: "192x192" }],
-          },
-        ],
-      },
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/story-api\.dicoding\.dev\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-            },
+            src: "/images/logo.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
           },
         ],
       },

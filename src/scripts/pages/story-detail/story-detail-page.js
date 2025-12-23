@@ -1,10 +1,15 @@
 import { getStories } from "../../data/api.js";
-import { getStoryFromDB } from "../../utils/indexeddb.js";
+import {
+  getStoryFromDB,
+  addStoryToDB,
+  deleteStoryFromDB,
+} from "../../utils/indexeddb.js";
 import { getLeaflet } from "../../utils/map.js";
 
 export default class StoryDetailPage {
   constructor() {
     this.storyId = null;
+    this.story = null;
   }
 
   async render() {
@@ -18,7 +23,11 @@ export default class StoryDetailPage {
     return `
       <section class="story-detail-section">
         <div class="container">
-          <button id="back-btn" class="back-button">← Back to Stories</button>
+          <div class="detail-actions">
+            <button id="back-btn" class="back-button">← Back to Stories</button>
+            <button id="save-offline-btn" class="save-button" style="display: none;">Save for Offline</button>
+            <button id="delete-offline-btn" class="delete-button" style="display: none;">Delete Offline Story</button>
+          </div>
           <div id="story-content" class="story-content">
             <div class="loading">Loading story...</div>
           </div>
@@ -30,27 +39,37 @@ export default class StoryDetailPage {
   async afterRender() {
     const backBtn = document.getElementById("back-btn");
     const storyContent = document.getElementById("story-content");
+    const saveOfflineBtn = document.getElementById("save-offline-btn");
+    const deleteOfflineBtn = document.getElementById("delete-offline-btn");
 
     backBtn.addEventListener("click", () => {
       window.location.hash = "#/stories";
     });
 
     try {
-      let story = null;
       try {
         const stories = await getStories();
-        story = stories.find((s) => s.id === this.storyId);
+        this.story = stories.find((s) => s.id === this.storyId);
       } catch (error) {
         console.log("API not available, trying IndexedDB");
       }
 
-      if (!story) {
-        story = await getStoryFromDB(this.storyId);
+      if (!this.story) {
+        this.story = await getStoryFromDB(this.storyId);
       }
 
-      if (story) {
-        storyContent.innerHTML = this.#renderStory(story);
-        this.#initializeMap(story);
+      if (this.story) {
+        storyContent.innerHTML = this.#renderStory(this.story);
+        this.#initializeMap(this.story);
+
+        const offlineStory = await getStoryFromDB(this.story.id);
+        if (offlineStory) {
+          deleteOfflineBtn.style.display = "block";
+          saveOfflineBtn.style.display = "none";
+        } else {
+          saveOfflineBtn.style.display = "block";
+          deleteOfflineBtn.style.display = "none";
+        }
       } else {
         storyContent.innerHTML = "<p>Story not found</p>";
       }
@@ -58,6 +77,34 @@ export default class StoryDetailPage {
       console.error("Error loading story:", error);
       storyContent.innerHTML = "<p>Error loading story</p>";
     }
+
+    saveOfflineBtn.addEventListener("click", async () => {
+      if (this.story) {
+        try {
+          await addStoryToDB(this.story);
+          alert("Story saved for offline viewing!");
+          deleteOfflineBtn.style.display = "block";
+          saveOfflineBtn.style.display = "none";
+        } catch (error) {
+          console.error("Error saving story offline:", error);
+          alert("Failed to save story offline.");
+        }
+      }
+    });
+
+    deleteOfflineBtn.addEventListener("click", async () => {
+      if (this.story) {
+        try {
+          await deleteStoryFromDB(this.story.id);
+          alert("Offline story deleted.");
+          saveOfflineBtn.style.display = "block";
+          deleteOfflineBtn.style.display = "none";
+        } catch (error) {
+          console.error("Error deleting offline story:", error);
+          alert("Failed to delete offline story.");
+        }
+      }
+    });
   }
 
   #renderStory(story) {

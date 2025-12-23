@@ -17,15 +17,18 @@ export default class HomePage {
         <div class="container">
           <h2>App Settings</h2>
           <div class="settings-grid">
-            <div class="setting-card">
+            <div class="setting-card" id="push-notification-card">
               <h3><i data-lucide="bell" class="setting-icon"></i> Push Notifications</h3>
-              <p>Receive notifications when new stories are added.</p>
-              <div class="setting-toggle">
+              <p id="push-description">Receive notifications when new stories are added.</p>
+              <div class="setting-toggle" id="push-toggle-container">
                 <label class="switch">
                   <input type="checkbox" id="push-notification-toggle">
                   <span class="slider round"></span>
                 </label>
                 <span class="toggle-status" id="push-status">Disabled</span>
+              </div>
+              <div class="login-required" id="login-required-message" style="display: none;">
+                <p class="login-prompt">Please <a href="#/login">login</a> first to enable push notifications.</p>
               </div>
             </div>
             <div class="setting-card" id="pwa-install-card" style="display: none;">
@@ -84,10 +87,27 @@ export default class HomePage {
   }
 
   async initPushNotificationToggle() {
+    const toggleContainer = document.getElementById("push-toggle-container");
     const toggle = document.getElementById("push-notification-toggle");
     const status = document.getElementById("push-status");
+    const loginRequiredMessage = document.getElementById("login-required-message");
 
-    if (!toggle || !status) return;
+    if (!toggleContainer || !toggle || !status || !loginRequiredMessage) return;
+
+    // Check if user is logged in
+    const token = localStorage.getItem("token");
+    const isLoggedIn = !!token;
+
+    if (!isLoggedIn) {
+      // Hide toggle and show login required message
+      toggleContainer.style.display = "none";
+      loginRequiredMessage.style.display = "block";
+      return;
+    }
+
+    // User is logged in, show toggle and initialize push notifications
+    toggleContainer.style.display = "flex";
+    loginRequiredMessage.style.display = "none";
 
     const { isPushNotificationEnabled, togglePushNotification } = await import(
       "../../utils/push-notification.js"
@@ -104,6 +124,7 @@ export default class HomePage {
       } catch (error) {
         console.error("Failed to toggle push notifications:", error);
         toggle.checked = !toggle.checked;
+        alert("Failed to toggle push notifications. Please check your connection and try again.");
       }
     });
   }

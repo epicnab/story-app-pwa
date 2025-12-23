@@ -1110,6 +1110,33 @@ input:checked + .slider:before {
   margin-left: 10px;
 }
 
+/* Login Required Message */
+.login-required {
+  text-align: center;
+  padding: 15px;
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.login-prompt {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #92400e;
+}
+
+.login-prompt a {
+  color: #dc2626;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.login-prompt a:hover,
+.login-prompt a:focus {
+  color: #b91c1c;
+}
+
 /* PWA Install Button Styles */
 .install-button {
   padding: 12px 20px;

@@ -33,10 +33,12 @@ async function fetchVAPIDKey() {
 
     const vapidKeyValue = data.vapidPublicKey || data.publicKey || data.key;
     if (!vapidKeyValue) {
-      throw new Error("No VAPID key found in response");
+      console.warn("No VAPID key from API, using fallback key");
+      // Fallback to provided key if API doesn't return one
+      return "BPuR4vuHRB97kzxJ32iFdIliYQVtruGVpI3eCX9b682AKrb8tKaLVVoYHFUgQoLHC3wTDgz9d6Yjr0yIf-KZu6s";
     }
 
-    console.log("VAPID key obtained:", vapidKeyValue.substring(0, 20) + "...");
+    console.log("VAPID key obtained from API:", vapidKeyValue.substring(0, 20) + "...");
     return vapidKeyValue;
   } catch (error) {
     console.error("Failed to fetch VAPID key:", error);

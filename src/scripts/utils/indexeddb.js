@@ -211,7 +211,9 @@ export async function getUnsyncedStories() {
     const index = store.index("synced");
 
     return new Promise((resolve, reject) => {
-      const request = index.getAll(false); // Get all stories where synced = false
+      // Use IDBKeyRange to get all stories where synced = false
+      const range = IDBKeyRange.only(false);
+      const request = index.getAll(range);
 
       request.onsuccess = () => {
         const unsyncedStories = request.result || [];

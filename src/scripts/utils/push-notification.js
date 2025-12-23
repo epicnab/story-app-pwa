@@ -167,16 +167,34 @@ export async function togglePushNotification() {
 }
 
 function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  try {
+    console.log("Converting VAPID key to Uint8Array:", base64String.substring(0, 20) + "...");
 
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
+    // Remove any whitespace
+    const cleanedBase64 = base64String.replace(/\s/g, '');
 
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
+    // Ensure proper padding
+    const padding = "=".repeat((4 - (cleanedBase64.length % 4)) % 4);
+    const base64 = (cleanedBase64 + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    console.log("Processed base64 string:", base64.substring(0, 20) + "...");
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+
+    console.log("Successfully converted VAPID key to Uint8Array, length:", outputArray.length);
+    return outputArray;
+  } catch (error) {
+    console.error("Failed to convert VAPID key:", error);
+    console.error("Original VAPID key:", base64String);
+    throw new Error(`Invalid VAPID key format: ${error.message}`);
   }
-  return outputArray;
 }
 
 async function sendSubscriptionToServer(subscription) {

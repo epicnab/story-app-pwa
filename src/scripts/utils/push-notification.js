@@ -6,19 +6,38 @@ let vapidKey = null;
 
 async function fetchVAPIDKey() {
   try {
+    const token = localStorage.getItem("token");
+    console.log("Fetching VAPID key with token:", token ? "present" : "missing");
+
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
     const response = await fetch(`${CONFIG.BASE_URL}/push-keys`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
+    console.log("VAPID key fetch response status:", response.status);
+
     if (!response.ok) {
-      throw new Error("Failed to fetch VAPID key");
+      const errorText = await response.text();
+      console.error("VAPID key fetch failed:", response.status, errorText);
+      throw new Error(`Failed to fetch VAPID key: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
-    return data.vapidPublicKey || data.publicKey;
+    console.log("VAPID key response data:", data);
+
+    const vapidKey = data.vapidPublicKey || data.publicKey || data.key;
+    if (!vapidKey) {
+      throw new Error("No VAPID key found in response");
+    }
+
+    console.log("VAPID key obtained:", vapidKey.substring(0, 20) + "...");
+    return vapidKey;
   } catch (error) {
     console.error("Failed to fetch VAPID key:", error);
     throw error;
@@ -162,23 +181,46 @@ function urlBase64ToUint8Array(base64String) {
 
 async function sendSubscriptionToServer(subscription) {
   try {
+    const token = localStorage.getItem("token");
+    console.log("Sending subscription to server with token:", token ? "present" : "missing");
+
+    const subscriptionData = subscription.toJSON();
+    console.log("Subscription data to send:", subscriptionData);
+
+    const requestBody = {
+      subscription: {
+        endpoint: subscriptionData.endpoint,
+        keys: {
+          p256dh: subscriptionData.keys?.p256dh,
+          auth: subscriptionData.keys?.auth
+        }
+      }
+    };
+
+    console.log("Request body:", requestBody);
+
     const response = await fetch(`${CONFIG.BASE_URL}/push-subscription`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        subscription: subscription.toJSON(),
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    console.log("Subscription send response status:", response.status);
+
     if (!response.ok) {
-      throw new Error("Failed to send subscription to server");
+      const errorText = await response.text();
+      console.error("Subscription send failed:", response.status, errorText);
+      throw new Error(`Failed to send subscription to server: ${response.status} ${errorText}`);
     }
 
+    const responseData = await response.json();
+    console.log("Subscription send response:", responseData);
     console.log("Subscription sent to server successfully");
   } catch (error) {
     console.error("Failed to send subscription to server:", error);
+    throw error;
   }
 }

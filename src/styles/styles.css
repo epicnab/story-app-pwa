@@ -95,6 +95,16 @@ header {
   text-decoration: underline;
 }
 
+.nav-list li a#logout-btn {
+  color: #dc2626;
+}
+
+.nav-list li a#logout-btn:hover,
+.nav-list li a#logout-btn:focus {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
 .main-content {
   padding-block: 20px;
   min-height: calc(100vh - 130px);

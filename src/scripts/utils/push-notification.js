@@ -31,13 +31,13 @@ async function fetchVAPIDKey() {
     const data = await response.json();
     console.log("VAPID key response data:", data);
 
-    const vapidKey = data.vapidPublicKey || data.publicKey || data.key;
-    if (!vapidKey) {
+    const vapidKeyValue = data.vapidPublicKey || data.publicKey || data.key;
+    if (!vapidKeyValue) {
       throw new Error("No VAPID key found in response");
     }
 
-    console.log("VAPID key obtained:", vapidKey.substring(0, 20) + "...");
-    return vapidKey;
+    console.log("VAPID key obtained:", vapidKeyValue.substring(0, 20) + "...");
+    return vapidKeyValue;
   } catch (error) {
     console.error("Failed to fetch VAPID key:", error);
     throw error;
@@ -99,7 +99,7 @@ async function subscribeToPush() {
       return;
     }
 
-    // Fetch VAPID key from API
+    // Fetch VAPID key from API if not already fetched
     if (!vapidKey) {
       vapidKey = await fetchVAPIDKey();
     }

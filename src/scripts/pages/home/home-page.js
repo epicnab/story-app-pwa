@@ -118,13 +118,34 @@ export default class HomePage {
 
     toggle.addEventListener("change", async () => {
       try {
+        status.textContent = "Processing...";
+        toggle.disabled = true;
+
         const isEnabled = await togglePushNotification();
         toggle.checked = isEnabled;
         status.textContent = isEnabled ? "Enabled" : "Disabled";
+
+        console.log("Push notification toggle successful, enabled:", isEnabled);
       } catch (error) {
         console.error("Failed to toggle push notifications:", error);
-        toggle.checked = !toggle.checked;
-        alert("Failed to toggle push notifications. Please check your connection and try again.");
+        toggle.checked = !toggle.checked; // Revert toggle state
+
+        // Show specific error message
+        let errorMessage = "Failed to toggle push notifications.";
+        if (error.message.includes("VAPID key")) {
+          errorMessage += " Please check your internet connection.";
+        } else if (error.message.includes("permission")) {
+          errorMessage += " Please allow notifications in your browser.";
+        } else if (error.message.includes("token")) {
+          errorMessage += " Please login again.";
+        } else {
+          errorMessage += " Please try again.";
+        }
+
+        alert(errorMessage);
+        status.textContent = "Disabled";
+      } finally {
+        toggle.disabled = false;
       }
     });
   }

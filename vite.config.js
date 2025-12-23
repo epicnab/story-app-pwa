@@ -4,7 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import fs from "fs";
 
 export default defineConfig({
-  base: "/",
+  base: "/story-app-pwa/",
   root: resolve(__dirname, "src"),
   publicDir: resolve(__dirname, "src", "public"),
   build: {

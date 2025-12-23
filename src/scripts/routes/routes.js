@@ -18,6 +18,7 @@ function requireAuth(PageClass) {
         setTimeout(() => {
           window.location.hash = "#/login";
         }, 100);
+
         return `
           <section class="auth-section">
             <div class="auth-container">
@@ -41,7 +42,7 @@ const routes = {
   "/login": new LoginPage(),
   "/register": new RegisterPage(),
   "/stories": new StoriesPage(),
-  "/add-story": requireAuth(AddStoryPage),
+  "/add-story": new (requireAuth(AddStoryPage))(), // <-- FIX: class -> instance
   "/story/:id": new StoryDetailPage(),
   "/offline": new OfflineStoriesPage(),
 };

@@ -24,23 +24,32 @@ export async function initDB() {
 }
 
 /* ======================
-   CREATE
+   CREATE / UPDATE
 ====================== */
 export async function addStoryToDB(story) {
   const db = await initDB();
-  return db.add(STORE_NAME, {
+
+  return db.put(STORE_NAME, {
     ...story,
-    synced: false,
-    createdAt: new Date().toISOString(),
+    synced: story.synced ?? false,
+    createdAt: story.createdAt ?? new Date().toISOString(),
   });
 }
 
 /* ======================
-   READ (INI YANG ERROR)
+   READ (ALL)
 ====================== */
 export async function getStoriesFromDB() {
   const db = await initDB();
   return db.getAll(STORE_NAME);
+}
+
+/* ======================
+   READ (SINGLE) ✅ FIX ERROR BUILD
+====================== */
+export async function getStoryFromDB(id) {
+  const db = await initDB();
+  return db.get(STORE_NAME, id);
 }
 
 /* ======================
@@ -62,6 +71,7 @@ export async function getUnsyncedStories() {
 export async function markStoryAsSynced(id) {
   const db = await initDB();
   const story = await db.get(STORE_NAME, id);
+
   if (story) {
     story.synced = true;
     await db.put(STORE_NAME, story);

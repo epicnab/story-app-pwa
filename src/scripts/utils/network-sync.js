@@ -1,23 +1,35 @@
-for (const story of unsyncedStories) {
-  try {
-    // photoBlob disimpan langsung dari IndexedDB
-    const file = new File([story.photoBlob], "story-photo.jpg", {
-      type: story.photoType || "image/jpeg",
-    });
+import { addStory } from "../data/api.js";
+import {
+  getUnsyncedStories,
+  markStoryAsSynced,
+} from "./indexeddb.js";
 
-    const formData = new FormData();
-    formData.append("description", story.description);
-    formData.append("photo", file);
-    formData.append("lat", story.lat);
-    formData.append("lon", story.lon);
+/**
+ * Sync offline stories to API
+ */
+export async function syncOfflineStories() {
+  const stories = await getUnsyncedStories();
 
-    await addStory(formData);
-    await markStoryAsSynced(story.id);
-    syncedCount++;
+  let syncedCount = 0;
 
-    console.log(`Synced story: ${story.id}`);
-  } catch (error) {
-    console.error(`Failed to sync story ${story.id}:`, error);
-    errorCount++;
+  for (const story of stories) {
+    try {
+      const formData = new FormData();
+      formData.append("description", story.description);
+      formData.append(
+        "photo",
+        new Blob([story.photoBlob], { type: story.photoType })
+      );
+      formData.append("lat", story.lat);
+      formData.append("lon", story.lon);
+
+      await addStory(formData);
+      await markStoryAsSynced(story.id);
+      syncedCount++;
+    } catch (error) {
+      console.warn("Sync failed for story:", story.id);
+    }
   }
+
+  return syncedCount;
 }

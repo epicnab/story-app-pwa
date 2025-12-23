@@ -4,143 +4,84 @@ let pushSubscription = null;
 let isPushEnabled = false;
 let vapidKey = null;
 
+/* =========================
+   FETCH VAPID KEY
+========================= */
 async function fetchVAPIDKey() {
-  try {
-    const token = localStorage.getItem("token");
-    console.log("Fetching VAPID key with token:", token ? "present" : "missing");
-
-    if (!token) {
-      throw new Error("No authentication token found");
-    }
-
-    const response = await fetch(`${CONFIG.BASE_URL}/push-keys`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    console.log("VAPID key fetch response status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("VAPID key fetch failed:", response.status, errorText);
-      throw new Error(`Failed to fetch VAPID key: ${response.status} ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log("VAPID key response data:", data);
-
-    const vapidKeyValue = data.vapidPublicKey || data.publicKey || data.key;
-    if (!vapidKeyValue) {
-      console.warn("No VAPID key from API, using fallback key");
-      // Fallback to provided key if API doesn't return one
-      return "BPuR4vuHRB97kzxJ32iFdIliYQVtruGVpI3eCX9b682AKrb8tKaLVVoYHFUgQoLHC3wTDgz9d6Yjr0yIf-KZu6s";
-    }
-
-    console.log("VAPID key obtained from API:", vapidKeyValue.substring(0, 20) + "...");
-    return vapidKeyValue;
-  } catch (error) {
-    console.error("Failed to fetch VAPID key:", error);
-    throw error;
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No authentication token found");
   }
+
+  const response = await fetch(`${CONFIG.BASE_URL}/push-keys`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch VAPID key (${response.status})`);
+  }
+
+  const data = await response.json();
+  const key = data.vapidPublicKey || data.publicKey || data.key;
+
+  if (!key || typeof key !== "string") {
+    throw new Error("VAPID key missing or invalid");
+  }
+
+  // Basic sanity check (VAPID public key length usually ~87 chars)
+  if (key.length < 80) {
+    throw new Error("VAPID key length is invalid");
+  }
+
+  return key.trim();
 }
 
+/* =========================
+   INIT
+========================= */
 export async function initPushNotification() {
-  try {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      console.warn("Push notifications not supported in this browser");
-      return;
-    }
-
-    const registration = await navigator.serviceWorker.ready;
-    console.log("Service Worker ready for push notifications:", registration);
-
-    if (!("showNotification" in ServiceWorkerRegistration.prototype)) {
-      console.warn("Notifications aren't supported.");
-      return;
-    }
-
-    const existingSubscription =
-      await registration.pushManager.getSubscription();
-    if (existingSubscription) {
-      console.log("Existing push subscription found");
-      pushSubscription = existingSubscription;
-      isPushEnabled = true;
-    }
-
-    if (Notification.permission === "granted") {
-      console.log("Notification permission already granted");
-    } else if (Notification.permission === "default") {
-      console.log("Notification permission not requested yet");
-    } else {
-      console.log("Notification permission denied");
-    }
-
-    navigator.serviceWorker.addEventListener("message", (event) => {
-      console.log("Message from service worker:", event.data);
-    });
-
-    console.log("Push notification initialization completed successfully");
-  } catch (error) {
-    console.error("Service Worker initialization failed:", error);
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    console.warn("Push notifications not supported");
+    return;
   }
+
+  await navigator.serviceWorker.ready;
+  console.log("✅ Service Worker ready for push");
 }
 
+/* =========================
+   SUBSCRIBE
+========================= */
 async function subscribeToPush() {
-  try {
-    const registration = await navigator.serviceWorker.ready;
+  const registration = await navigator.serviceWorker.ready;
 
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn("Push notifications not supported in this browser");
-      return;
-    }
-
-    if (!window.location.protocol.includes('https') && window.location.hostname !== 'localhost') {
-      console.warn("Push notifications require HTTPS");
-      return;
-    }
-
-    // Fetch VAPID key from API if not already fetched
-    if (!vapidKey) {
-      vapidKey = await fetchVAPIDKey();
-    }
-
-    pushSubscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidKey),
-    });
-
-    console.log("Push notification subscription:", pushSubscription);
-    isPushEnabled = true;
-
-    // Send subscription to server
-    await sendSubscriptionToServer(pushSubscription);
-
-  } catch (error) {
-    console.error("Failed to subscribe to push notifications:", error);
-    isPushEnabled = false;
-
-    if (error.name === 'NotAllowedError') {
-      console.warn("Push notifications permission denied by user");
-    } else if (error.name === 'AbortError') {
-      console.warn("Push subscription aborted");
-    } else {
-      console.error("Push notification subscription failed:", error.message);
-    }
+  if (Notification.permission !== "granted") {
+    throw new Error("Notification permission not granted");
   }
+
+  if (!vapidKey) {
+    vapidKey = await fetchVAPIDKey();
+  }
+
+  const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+
+  pushSubscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey,
+  });
+
+  isPushEnabled = true;
+  await sendSubscriptionToServer(pushSubscription);
 }
 
+/* =========================
+   UNSUBSCRIBE
+========================= */
 export async function unsubscribeFromPush() {
-  try {
-    if (pushSubscription) {
-      await pushSubscription.unsubscribe();
-      pushSubscription = null;
-      isPushEnabled = false;
-      console.log("Successfully unsubscribed from push notifications");
-    }
-  } catch (error) {
-    console.error("Failed to unsubscribe from push notifications:", error);
+  if (pushSubscription) {
+    await pushSubscription.unsubscribe();
+    pushSubscription = null;
+    isPushEnabled = false;
   }
 }
 
@@ -151,96 +92,55 @@ export function isPushNotificationEnabled() {
 export async function togglePushNotification() {
   if (isPushEnabled) {
     await unsubscribeFromPush();
-  } else {
-    if (Notification.permission === "default") {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        console.warn("Notification permission denied");
-        return false;
-      }
-    } else if (Notification.permission === "denied") {
-      console.warn("Notification permission was denied previously");
-      return false;
-    }
-
-    await subscribeToPush();
+    return false;
   }
-  return isPushEnabled;
+
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    console.warn("Notification permission denied");
+    return false;
+  }
+
+  await subscribeToPush();
+  return true;
 }
 
+/* =========================
+   BASE64 → UINT8ARRAY
+========================= */
 function urlBase64ToUint8Array(base64String) {
+  const base64 = base64String
+    .replace(/\s/g, "")
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+
   try {
-    console.log("Converting VAPID key to Uint8Array:", base64String.substring(0, 20) + "...");
-
-    // Remove any whitespace
-    const cleanedBase64 = base64String.replace(/\s/g, '');
-
-    // Ensure proper padding
-    const padding = "=".repeat((4 - (cleanedBase64.length % 4)) % 4);
-    const base64 = (cleanedBase64 + padding)
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
-
-    console.log("Processed base64 string:", base64.substring(0, 20) + "...");
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-
-    console.log("Successfully converted VAPID key to Uint8Array, length:", outputArray.length);
-    return outputArray;
-  } catch (error) {
-    console.error("Failed to convert VAPID key:", error);
-    console.error("Original VAPID key:", base64String);
-    throw new Error(`Invalid VAPID key format: ${error.message}`);
+    const rawData = window.atob(padded);
+    return Uint8Array.from(rawData, c => c.charCodeAt(0));
+  } catch {
+    throw new Error("Invalid VAPID public key format");
   }
 }
 
+/* =========================
+   SEND TO SERVER
+========================= */
 async function sendSubscriptionToServer(subscription) {
-  try {
-    const token = localStorage.getItem("token");
-    console.log("Sending subscription to server with token:", token ? "present" : "missing");
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("No auth token");
 
-    const subscriptionData = subscription.toJSON();
-    console.log("Subscription data to send:", subscriptionData);
+  const response = await fetch(`${CONFIG.BASE_URL}/push-subscription`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ subscription }),
+  });
 
-    const requestBody = {
-      subscription: {
-        endpoint: subscriptionData.endpoint,
-        keys: {
-          p256dh: subscriptionData.keys?.p256dh,
-          auth: subscriptionData.keys?.auth
-        }
-      }
-    };
-
-    console.log("Request body:", requestBody);
-
-    const response = await fetch(`${CONFIG.BASE_URL}/push-subscription`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    console.log("Subscription send response status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Subscription send failed:", response.status, errorText);
-      throw new Error(`Failed to send subscription to server: ${response.status} ${errorText}`);
-    }
-
-    const responseData = await response.json();
-    console.log("Subscription send response:", responseData);
-    console.log("Subscription sent to server successfully");
-  } catch (error) {
-    console.error("Failed to send subscription to server:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(`Failed to send subscription (${response.status})`);
   }
 }

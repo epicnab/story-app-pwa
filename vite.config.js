@@ -17,20 +17,17 @@ export default defineConfig({
     },
   },
   plugins: [
-    // Plugin to add push notification handlers after build
+    // Inject push notification handlers into generated service worker
     {
-      name: 'add-push-handlers',
+      name: "add-push-handlers",
       closeBundle() {
-        // Read the generated service worker
-        const swPath = resolve(__dirname, 'dist/sw.js');
-        if (fs.existsSync(swPath)) {
-          let swContent = fs.readFileSync(swPath, 'utf-8');
+        const swPath = resolve(__dirname, "dist/sw.js");
+        if (!fs.existsSync(swPath)) return;
 
-          // Add push notification handlers before the final closing
-          const pushHandlers = `
-self.addEventListener('push', function(event) {
-  console.log('Push received: ', event);
+        let swContent = fs.readFileSync(swPath, "utf-8");
 
+        const pushHandlers = `
+self.addEventListener('push', (event) => {
   let data = {};
   if (event.data) {
     data = event.data.json();
@@ -38,20 +35,12 @@ self.addEventListener('push', function(event) {
 
   const options = {
     body: data.body || "New story added!",
-    icon: data.icon || "/images/logo.png",
-    badge: "/images/logo.png",
-    vibrate: [100, 50, 100],
+    icon: "/story-app-pwa/images/logo.png",
+    badge: "/story-app-pwa/images/logo.png",
     data: data.data || {},
     actions: [
-      {
-        action: "view",
-        title: "View Story",
-        icon: "/images/logo.png",
-      },
-      {
-        action: "close",
-        title: "Close",
-      },
+      { action: "view", title: "View Story" },
+      { action: "close", title: "Close" }
     ],
   };
 
@@ -63,44 +52,40 @@ self.addEventListener('push', function(event) {
   );
 });
 
-self.addEventListener('notificationclick', function(event) {
-  console.log('Notification click received: ', event);
-
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  if (event.action === 'view') {
+  if (event.action === "view") {
     const storyId = event.notification.data?.storyId;
-    if (storyId) {
-      event.waitUntil(clients.openWindow(\`/story/\${storyId}\`));
-    } else {
-      event.waitUntil(clients.openWindow('/stories'));
-    }
-  } else if (event.action === 'close') {
-    // Do nothing
-  } else {
-    event.waitUntil(clients.openWindow('/stories'));
+    event.waitUntil(
+      clients.openWindow(
+        storyId
+          ? \`/story-app-pwa/story/\${storyId}\`
+          : "/story-app-pwa/stories"
+      )
+    );
   }
-});`;
+});
+`;
 
-          // Insert push handlers before the final closing parenthesis and semicolon
-          swContent = swContent.replace(/\)\s*;?\s*$/, pushHandlers + '\n});');
-
-          fs.writeFileSync(swPath, swContent);
-          console.log('Push notification handlers added to service worker');
-        }
+        // Tambahkan sebelum akhir file
+        swContent += pushHandlers;
+        fs.writeFileSync(swPath, swContent);
+        console.log("✅ Push handlers injected into service worker");
       },
     },
+
     VitePWA({
       registerType: "autoUpdate",
       strategies: "generateSW",
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/story-api\.dicoding\.dev\/.*/i,
-            handler: 'NetworkFirst',
+            handler: "NetworkFirst",
             options: {
-              cacheName: 'api-cache',
+              cacheName: "api-cache",
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
@@ -108,14 +93,6 @@ self.addEventListener('notificationclick', function(event) {
             },
           },
         ],
-        additionalManifestEntries: [
-          {
-            url: '/sw.js',
-            revision: null,
-          },
-        ],
-        // Add push notification handlers
-        importScripts: [],
         clientsClaim: true,
         skipWaiting: true,
       },
@@ -131,27 +108,27 @@ self.addEventListener('notificationclick', function(event) {
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait",
-        scope: "/",
-        start_url: "/",
+        scope: "/story-app-pwa/",
+        start_url: "/story-app-pwa/",
         icons: [
           {
-            src: "/images/logo.png",
+            src: "images/logo.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/images/logo.png",
+            src: "images/logo.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "/images/logo.png",
+            src: "images/logo.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "maskable",
           },
           {
-            src: "/images/logo.png",
+            src: "images/logo.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",

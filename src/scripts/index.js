@@ -1,7 +1,7 @@
 import "../styles/styles.css";
 
 import App from "./pages/app";
-import "./utils/network-sync.js";
+import { syncOfflineStories } from "./utils/network-sync.js";
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -77,4 +77,61 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Update navigation after page change
     updateNavigation();
   });
+
+  // Network status monitoring for auto-sync
+  let isOnline = navigator.onLine;
+
+  async function handleNetworkChange(online) {
+    if (online && !isOnline) {
+      console.log("Network back online, syncing offline stories...");
+      try {
+        const syncedCount = await syncOfflineStories();
+        if (syncedCount > 0) {
+          console.log(`Successfully synced ${syncedCount} stories`);
+
+          // Refresh current page if it's stories page
+          if (window.location.hash === "#/stories" || window.location.hash === "#/offline") {
+            await app.renderPage();
+          }
+        }
+      } catch (error) {
+        console.warn("Auto-sync failed:", error);
+      }
+    }
+    isOnline = online;
+  }
+
+  // Function to sync on app load regardless of network state
+  async function initialSyncCheck() {
+    if (navigator.onLine) {
+      console.log("Checking for unsynced stories on app load...");
+      try {
+        const syncedCount = await syncOfflineStories();
+        if (syncedCount > 0) {
+          console.log(`Successfully synced ${syncedCount} stories on app load`);
+
+          // Refresh current page if it's stories page
+          if (window.location.hash === "#/stories" || window.location.hash === "#/offline") {
+            await app.renderPage();
+          }
+        }
+      } catch (error) {
+        console.warn("Initial sync failed:", error);
+      }
+    }
+  }
+
+  // Listen for online/offline events
+  window.addEventListener("online", () => handleNetworkChange(true));
+  window.addEventListener("offline", () => handleNetworkChange(false));
+
+  // Also check network status on page visibility change (when user returns to tab)
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && navigator.onLine && !isOnline) {
+      handleNetworkChange(true);
+    }
+  });
+
+  // Initial sync check on app load
+  await initialSyncCheck();
 });

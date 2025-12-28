@@ -9,7 +9,7 @@ async function getVapidKey() {
   const token = localStorage.getItem("token");
   if (!token) throw new Error("User not authenticated");
 
-  const response = await fetch(`${CONFIG.BASE_URL}/push-keys`, {
+  const response = await fetch(`${CONFIG.BASE_URL}/notifications/keys`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -70,7 +70,7 @@ export async function subscribePushNotification() {
 async function sendSubscriptionToServer(subscription) {
   const token = localStorage.getItem("token");
 
-  const response = await fetch(`${CONFIG.BASE_URL}/push-subscription`, {
+  const response = await fetch(`${CONFIG.BASE_URL}/notifications/subscribe`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

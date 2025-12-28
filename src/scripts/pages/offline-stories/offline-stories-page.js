@@ -36,15 +36,24 @@ export default class OfflineStoriesPage {
   }
 
   renderStoryCard(story) {
+    let photoSrc = "";
+    if (story.photoBlob) {
+      photoSrc = URL.createObjectURL(story.photoBlob);
+    } else if (story.photoUrl) {
+      photoSrc = story.photoUrl;
+    } else {
+      photoSrc = "/images/placeholder.png";
+    }
+
     return `
       <div class="story-card" id="story-${story.id}">
-        <img src="${story.photoUrl}" alt="${story.name}'s story" class="story-image">
+        <img src="${photoSrc}" alt="Story photo" class="story-image">
         <div class="story-content">
-          <h2>${story.name}</h2>
-          <p class="story-description">${story.description.substring(0, 100)}...</p>
+          <p class="story-description">${story.description || "No description"}</p>
           <div class="story-meta">
             <time datetime="${story.createdAt}">${new Date(story.createdAt).toLocaleDateString()}</time>
             <button class="delete-button" data-id="${story.id}">Delete</button>
+            <button class="save-button" data-id="${story.id}" ${story.synced ? 'disabled' : ''}>${story.synced ? 'Synced' : 'Save Offline'}</button>
           </div>
         </div>
       </div>

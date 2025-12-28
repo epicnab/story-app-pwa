@@ -8,26 +8,32 @@ export default class AddStoryPage {
 
   async render() {
     return `
-      <section class="add-story">
+      <section class="add-story-section">
         <h1>Add Story</h1>
 
-        <form id="story-form">
-          <textarea
-            id="description"
-            placeholder="Story description"
-            required
-          ></textarea>
+        <form class="story-form">
+          <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea
+              id="description"
+              placeholder="Story description"
+              required
+            ></textarea>
+          </div>
 
-          <input type="file" id="photo" accept="image/*" required />
+          <div class="form-group">
+            <label for="photo">Photo:</label>
+            <input type="file" id="photo" accept="image/*" required />
+          </div>
 
-          <div id="map" style="height:300px"></div>
-          <p id="coords">No location selected</p>
+          <div id="map" class="location-map"></div>
+          <div id="coords" class="coordinates-display">No location selected</div>
 
-          <button type="submit">Submit</button>
-          <button type="button" id="cancel-btn">Cancel</button>
+          <button type="submit" class="submit-button">Submit</button>
+          <button type="button" id="cancel-btn" class="cancel-button">Cancel</button>
         </form>
 
-        <p id="message"></p>
+        <div id="message" class="message"></div>
       </section>
     `;
   }
@@ -55,15 +61,15 @@ export default class AddStoryPage {
       if (marker) map.removeLayer(marker);
       marker = L.marker(e.latlng).addTo(map);
 
-      document.getElementById(
-        "coords"
-      ).textContent = `${this.#lat}, ${this.#lon}`;
+      document.getElementById("coords").textContent = `${this.#lat}, ${
+        this.#lon
+      }`;
     });
   }
 
   #bindForm() {
-    const form = document.getElementById("story-form");
-    const msg = document.getElementById("message");
+    const form = document.querySelector(".story-form");
+    const msg = document.querySelector(".message");
 
     document.getElementById("cancel-btn").onclick = () => {
       window.location.hash = "#/stories";
@@ -74,6 +80,8 @@ export default class AddStoryPage {
 
       if (!this.#lat || !this.#lon) {
         msg.textContent = "Please select location";
+        msg.classList.add("error");
+        msg.classList.remove("success");
         return;
       }
 
@@ -87,9 +95,13 @@ export default class AddStoryPage {
       formData.append("lon", this.#lon);
 
       try {
+        // Try upload langsung
         await addStory(formData);
         msg.textContent = "Story added successfully";
+        msg.classList.add("success");
+        msg.classList.remove("error");
       } catch (error) {
+        // Offline → simpan ke IndexedDB
         await addStoryToDB({
           description,
           lat: this.#lat,
@@ -97,8 +109,22 @@ export default class AddStoryPage {
           photoBlob: file,
           photoType: file.type,
           synced: false,
+          createdAt: new Date().toISOString(),
         });
         msg.textContent = "Offline: story saved locally";
+        msg.classList.add("success");
+        msg.classList.remove("error");
+
+        // Daftarkan background sync jika tersedia
+        if ("serviceWorker" in navigator && "SyncManager" in window) {
+          const sw = await navigator.serviceWorker.ready;
+          try {
+            await sw.sync.register("sync-stories");
+            console.log("Background sync registered");
+          } catch (err) {
+            console.warn("Background sync registration failed", err);
+          }
+        }
       }
 
       setTimeout(() => {

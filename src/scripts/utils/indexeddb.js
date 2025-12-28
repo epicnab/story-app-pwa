@@ -56,8 +56,21 @@ export async function getStoryFromDB(id) {
    DELETE
 ====================== */
 export async function deleteStoryFromDB(id) {
+  console.log(`Deleting story from IndexedDB with ID: ${id}`);
   const db = await initDB();
-  return db.delete(STORE_NAME, id);
+
+  // Check if story exists before deleting
+  const existingStory = await db.get(STORE_NAME, id);
+  console.log(`Story exists before delete:`, !!existingStory);
+
+  const result = await db.delete(STORE_NAME, id);
+  console.log(`Delete operation completed for ID: ${id}`);
+
+  // Verify deletion
+  const storyAfterDelete = await db.get(STORE_NAME, id);
+  console.log(`Story exists after delete:`, !!storyAfterDelete);
+
+  return result;
 }
 
 /* ======================
@@ -65,7 +78,9 @@ export async function deleteStoryFromDB(id) {
 ====================== */
 export async function getUnsyncedStories() {
   const db = await initDB();
-  return db.getAllFromIndex(STORE_NAME, "synced", false);
+  const allStories = await db.getAll(STORE_NAME);
+  // Filter stories that are not synced (either false or undefined/null)
+  return allStories.filter(story => story.synced === false || story.synced === undefined || story.synced === null);
 }
 
 export async function markStoryAsSynced(id) {
@@ -76,4 +91,32 @@ export async function markStoryAsSynced(id) {
     story.synced = true;
     await db.put(STORE_NAME, story);
   }
+}
+
+/* ======================
+   BOOKMARK HELPERS
+====================== */
+export async function isStoryBookmarked(storyId) {
+  const db = await initDB();
+  const story = await db.get(STORE_NAME, storyId);
+  return story?.bookmarked === true;
+}
+
+export async function toggleBookmark(storyId) {
+  const db = await initDB();
+  const story = await db.get(STORE_NAME, storyId);
+
+  if (story) {
+    story.bookmarked = !story.bookmarked;
+    await db.put(STORE_NAME, story);
+    return story.bookmarked;
+  }
+
+  return false;
+}
+
+export async function getBookmarkedStories() {
+  const db = await initDB();
+  const allStories = await db.getAll(STORE_NAME);
+  return allStories.filter(story => story.bookmarked === true);
 }

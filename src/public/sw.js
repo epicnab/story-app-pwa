@@ -9,6 +9,7 @@ clientsClaim();
 
 precacheAndRoute(self.__WB_MANIFEST);
 
+// Runtime caching untuk Dicoding Story API
 registerRoute(
   ({ url }) => url.origin === "https://story-api.dicoding.dev",
   new NetworkFirst({
@@ -16,14 +17,35 @@ registerRoute(
     plugins: [
       new ExpirationPlugin({
         maxEntries: 20,
-        maxAgeSeconds: 60 * 60 * 24 * 30,
+        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 hari
       }),
     ],
   })
 );
 
 /* =====================
-   PUSH NOTIFICATION
+   Background Sync
+===================== */
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-stories") {
+    event.waitUntil(
+      (async () => {
+        try {
+          // Path harus sesuai folder publik
+          const module = await import("/scripts/utils/network-sync.js");
+          const { syncOfflineStories } = module;
+          const count = await syncOfflineStories();
+          console.log(`Background Sync: ${count} story(s) synced`);
+        } catch (err) {
+          console.error("Background sync failed", err);
+        }
+      })()
+    );
+  }
+});
+
+/* =====================
+   Push Notification
 ===================== */
 self.addEventListener("push", (event) => {
   let data = {};
@@ -36,15 +58,14 @@ self.addEventListener("push", (event) => {
     }
   }
 
+  const options = {
+    body: data.body || "Ada story baru 🎉",
+    icon: "/images/logo.png",
+    badge: "/images/logo.png",
+  };
+
   event.waitUntil(
-    self.registration.showNotification(
-      data.title || "Story App",
-      {
-        body: data.body || "Ada story baru 🎉",
-        icon: "/images/logo.png",
-        badge: "/images/logo.png",
-      }
-    )
+    self.registration.showNotification(data.title || "Story App", options)
   );
 });
 

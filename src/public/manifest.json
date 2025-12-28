@@ -6,6 +6,7 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#343a40",
+  "categories": ["social", "lifestyle", "photo"],
   "icons": [
     {
       "src": "/images/logo.png",

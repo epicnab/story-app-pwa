@@ -113,7 +113,7 @@ export default class HomePage {
       "../../utils/push-notification.js"
     );
 
-    toggle.checked = isPushNotificationEnabled();
+    toggle.checked = await isPushNotificationEnabled();
     status.textContent = toggle.checked ? "Enabled" : "Disabled";
 
     toggle.addEventListener("change", async () => {

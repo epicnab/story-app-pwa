@@ -74,11 +74,9 @@ export default class HomePage {
       window.lucide.createIcons();
     }
 
-    // Initialize push notifications for this page
     const { initPushNotification } = await import("../../utils/push-notification.js");
     await initPushNotification();
 
-    // Initialize PWA install functionality
     const { initPWAInstall, canInstallPWA, showInstallPrompt } = await import("../../utils/pwa-install.js");
     initPWAInstall();
 
@@ -94,18 +92,15 @@ export default class HomePage {
 
     if (!toggleContainer || !toggle || !status || !loginRequiredMessage) return;
 
-    // Check if user is logged in
     const token = localStorage.getItem("token");
     const isLoggedIn = !!token;
 
     if (!isLoggedIn) {
-      // Hide toggle and show login required message
       toggleContainer.style.display = "none";
       loginRequiredMessage.style.display = "block";
       return;
     }
 
-    // User is logged in, show toggle and initialize push notifications
     toggleContainer.style.display = "flex";
     loginRequiredMessage.style.display = "none";
 
@@ -128,9 +123,8 @@ export default class HomePage {
         console.log("Push notification toggle successful, enabled:", isEnabled);
       } catch (error) {
         console.error("Failed to toggle push notifications:", error);
-        toggle.checked = !toggle.checked; // Revert toggle state
+        toggle.checked = !toggle.checked; 
 
-        // Show specific error message
         let errorMessage = "Failed to toggle push notifications.";
         if (error.message.includes("VAPID key")) {
           errorMessage += " Please check your internet connection.";
@@ -158,19 +152,16 @@ export default class HomePage {
 
     const { canInstallPWA, showInstallPrompt, isPWAInstallable } = await import("../../utils/pwa-install.js");
 
-    // Check if PWA can be installed
     if (canInstallPWA()) {
       installCard.style.display = "block";
     }
 
-    // Listen for PWA install availability
     window.addEventListener('pwa-installable', (event) => {
       if (event.detail.installable) {
         installCard.style.display = "block";
       }
     });
 
-    // Handle install button click
     installButton.addEventListener("click", async () => {
       try {
         const installed = await showInstallPrompt();
@@ -183,7 +174,6 @@ export default class HomePage {
       }
     });
 
-    // Hide install card after successful installation
     window.addEventListener('pwa-installed', () => {
       installCard.style.display = "none";
     });

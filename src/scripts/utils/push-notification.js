@@ -85,3 +85,71 @@ async function sendSubscriptionToServer(subscription) {
 
   console.log("Push subscription sent successfully");
 }
+
+/**
+ * Unsubscribe push notification
+ */
+export async function unsubscribePushNotification() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    console.warn("Push notification not supported");
+    return;
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+  const existingSubscription = await registration.pushManager.getSubscription();
+
+  if (existingSubscription) {
+    await existingSubscription.unsubscribe();
+    await sendUnsubscriptionToServer(existingSubscription);
+    subscription = null;
+  }
+}
+
+/**
+ * Kirim unsubscription ke server Dicoding
+ */
+async function sendUnsubscriptionToServer(subscription) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${CONFIG.BASE_URL}/notifications/unsubscribe`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(subscription),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to send push unsubscription");
+  }
+
+  console.log("Push unsubscription sent successfully");
+}
+
+/**
+ * Check if push notification is enabled
+ */
+export async function isPushNotificationEnabled() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    return false;
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+  const existingSubscription = await registration.pushManager.getSubscription();
+  return !!existingSubscription;
+}
+
+/**
+ * Toggle push notification
+ */
+export async function togglePushNotification() {
+  const enabled = await isPushNotificationEnabled();
+  if (enabled) {
+    await unsubscribePushNotification();
+    return false;
+  } else {
+    await subscribePushNotification();
+    return true;
+  }
+}

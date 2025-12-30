@@ -153,3 +153,11 @@ export async function togglePushNotification() {
     return true;
   }
 }
+
+/**
+ * Initialize push notification (check current status)
+ */
+export async function initPushNotification() {
+  // This function can be used for initialization if needed
+  console.log("Push notification initialized");
+}

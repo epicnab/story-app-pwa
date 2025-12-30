@@ -48,7 +48,7 @@ export default class AddStoryPage {
     const L = getLeaflet();
     const map = L.map("map").setView([-6.2, 106.816666], 10);
 
-    L.tileLayer("https:
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 

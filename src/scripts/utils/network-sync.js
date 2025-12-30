@@ -14,14 +14,12 @@ export async function syncOfflineStories() {
     try {
       console.log(`Syncing story ${story.id}...`);
 
-      // Check if user is logged in
       const token = localStorage.getItem("token");
       if (!token) {
         console.warn(`No auth token found, skipping story ${story.id}`);
         continue;
       }
 
-      // Convert Blob menjadi File agar bisa dikirim FormData
       let file;
       if (story.photoBlob instanceof Blob) {
         file = new File([story.photoBlob], `story-${story.id}.jpg`, {
@@ -46,7 +44,6 @@ export async function syncOfflineStories() {
       console.log(`✅ Story ${story.id} synced successfully`);
     } catch (error) {
       console.error(`❌ Sync failed for story ${story.id}:`, error);
-      // Continue with other stories even if one fails
     }
   }
 

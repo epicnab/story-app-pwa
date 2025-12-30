@@ -59,14 +59,12 @@ export async function deleteStoryFromDB(id) {
   console.log(`Deleting story from IndexedDB with ID: ${id}`);
   const db = await initDB();
 
-  // Check if story exists before deleting
   const existingStory = await db.get(STORE_NAME, id);
   console.log(`Story exists before delete:`, !!existingStory);
 
   const result = await db.delete(STORE_NAME, id);
   console.log(`Delete operation completed for ID: ${id}`);
 
-  // Verify deletion
   const storyAfterDelete = await db.get(STORE_NAME, id);
   console.log(`Story exists after delete:`, !!storyAfterDelete);
 
@@ -79,7 +77,6 @@ export async function deleteStoryFromDB(id) {
 export async function getUnsyncedStories() {
   const db = await initDB();
   const allStories = await db.getAll(STORE_NAME);
-  // Filter stories that are not synced (either false or undefined/null)
   return allStories.filter(story => story.synced === false || story.synced === undefined || story.synced === null);
 }
 

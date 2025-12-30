@@ -48,7 +48,7 @@ export default class AddStoryPage {
     const L = getLeaflet();
     const map = L.map("map").setView([-6.2, 106.816666], 10);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("https:
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
@@ -95,13 +95,11 @@ export default class AddStoryPage {
       formData.append("lon", this.#lon);
 
       try {
-        // Try upload langsung
         await addStory(formData);
         msg.textContent = "Story added successfully";
         msg.classList.add("success");
         msg.classList.remove("error");
       } catch (error) {
-        // Offline → simpan ke IndexedDB
         await addStoryToDB({
           description,
           lat: this.#lat,
@@ -115,7 +113,6 @@ export default class AddStoryPage {
         msg.classList.add("success");
         msg.classList.remove("error");
 
-        // Daftarkan background sync jika tersedia
         if ("serviceWorker" in navigator && "SyncManager" in window) {
           const sw = await navigator.serviceWorker.ready;
           try {

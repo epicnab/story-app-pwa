@@ -7,14 +7,11 @@ import AddStoryPage from "../pages/add-story/add-story-page";
 import StoryDetailPage from "../pages/story-detail/story-detail-page";
 import OfflineStoriesPage from "../pages/offline-stories/offline-stories-page";
 
-// Authentication guard
 function requireAuth(PageClass) {
   return class extends PageClass {
     async render() {
-      // Check if user is authenticated
       const token = localStorage.getItem("token");
       if (!token) {
-        // Redirect to login if not authenticated
         setTimeout(() => {
           window.location.hash = "#/login";
         }, 100);
@@ -30,7 +27,6 @@ function requireAuth(PageClass) {
           </section>
         `;
       }
-      // User is authenticated, render the page
       return super.render();
     }
   };
@@ -42,7 +38,7 @@ const routes = {
   "/login": new LoginPage(),
   "/register": new RegisterPage(),
   "/stories": new StoriesPage(),
-  "/add-story": new (requireAuth(AddStoryPage))(), // <-- FIX: class -> instance
+  "/add-story": new (requireAuth(AddStoryPage))(), 
   "/story/:id": new StoryDetailPage(),
   "/offline": new OfflineStoriesPage(),
 };

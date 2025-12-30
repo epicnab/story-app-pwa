@@ -72,7 +72,6 @@ export default class OfflineStoriesPage {
             if (storyCard) {
               storyCard.remove();
             }
-            // re-render if no stories left
             const storiesList = document.getElementById('offline-stories-list');
             if (storiesList.childElementCount === 0) {
               storiesList.innerHTML = '<p>No stories saved for offline viewing.</p>';

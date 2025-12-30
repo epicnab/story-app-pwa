@@ -463,7 +463,6 @@ header {
   font-size: 1rem;
 }
 
-/* Map Styles */
 .map-container {
   height: 500px;
   width: 100%;
@@ -815,7 +814,6 @@ header {
   }
 }
 
-/* Settings Section Styles */
 .settings-section {
   padding: 40px 0;
   background-color: #ffffff;
@@ -872,7 +870,6 @@ header {
   margin-top: 10px;
 }
 
-/* Stories Filters */
 .stories-filters {
   margin-bottom: 30px;
   background: white;
@@ -964,7 +961,6 @@ header {
   color: #dc2626;
 }
 
-/* Story Badges */
 .story-badges {
   display: flex;
   gap: 8px;
@@ -989,7 +985,6 @@ header {
   color: #92400e;
 }
 
-/* Story Detail Page Styles */
 .story-detail-section {
   padding: 40px 0;
   background-color: #f8fafc;
@@ -1086,7 +1081,6 @@ header {
   color: #6b7280;
 }
 
-/* Toggle Switch Styles */
 .switch {
   position: relative;
   display: inline-block;
@@ -1142,7 +1136,6 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
-/* Screen reader only text */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1161,7 +1154,6 @@ input:checked + .slider:before {
   margin-left: 10px;
 }
 
-/* Login Required Message */
 .login-required {
   text-align: center;
   padding: 15px;
@@ -1188,7 +1180,6 @@ input:checked + .slider:before {
   color: #b91c1c;
 }
 
-/* PWA Install Button Styles */
 .install-button {
   padding: 12px 20px;
   background-color: #10b981;

@@ -9,15 +9,14 @@ clientsClaim();
 
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Runtime caching untuk Dicoding Story API
 registerRoute(
-  ({ url }) => url.origin === "https://story-api.dicoding.dev",
+  ({ url }) => url.origin === "https:
   new NetworkFirst({
     cacheName: "dicoding-story-api",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 20,
-        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 hari
+        maxAgeSeconds: 60 * 60 * 24 * 30, 
       }),
     ],
   })
@@ -31,7 +30,6 @@ self.addEventListener("sync", (event) => {
     event.waitUntil(
       (async () => {
         try {
-          // Path harus sesuai folder publik
           const module = await import("/scripts/utils/network-sync.js");
           const { syncOfflineStories } = module;
           const count = await syncOfflineStories();

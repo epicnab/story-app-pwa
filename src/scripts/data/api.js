@@ -85,7 +85,6 @@ export async function deleteStory(storyId) {
 
       console.log(`Response status: ${response.status} ${response.statusText}`);
 
-      // Try to get response body
       let responseData;
       try {
         responseData = await response.json();
@@ -106,7 +105,6 @@ export async function deleteStory(storyId) {
     }
   }
 
-  // Try POST to /delete endpoint
   try {
     console.log(`Trying POST ${ENDPOINTS.STORIES}/delete`);
 
@@ -181,7 +179,6 @@ export async function bookmarkStory(storyId) {
     throw new Error("No authentication token");
   }
 
-  // Try different bookmark endpoints
   const endpoints = [
     `${ENDPOINTS.STORIES}/${storyId}/bookmark`,
     `${ENDPOINTS.STORIES}/${storyId}/favorite`,
@@ -227,7 +224,6 @@ export async function unbookmarkStory(storyId) {
     throw new Error("No authentication token");
   }
 
-  // Try different unbookmark endpoints
   const endpoints = [
     `${ENDPOINTS.STORIES}/${storyId}/bookmark`,
     `${ENDPOINTS.STORIES}/${storyId}/favorite`,

@@ -45,12 +45,10 @@ export default class StoriesPage {
       window.location.hash = "#/add-story";
     });
 
-    // Sync button functionality
     document.getElementById("sync-btn").addEventListener("click", () => {
       this.#syncStories();
     });
 
-    // Debug buttons (temporary for debugging)
     const testBtn = document.createElement("button");
     testBtn.textContent = "Test API";
     testBtn.style.marginLeft = "10px";
@@ -95,7 +93,6 @@ export default class StoriesPage {
       return;
     }
 
-    // Check bookmark status for each story
     const storiesWithBookmarks = await Promise.all(
       this.#stories.map(async (story) => {
         const isBookmarked = await isStoryBookmarked(story.id);
@@ -106,22 +103,20 @@ export default class StoriesPage {
     container.innerHTML = storiesWithBookmarks
       .map((story) => {
         let photoSrc = "";
-        // Jika online API → gunakan photoUrl
         if (story.photoUrl) {
           photoSrc = story.photoUrl;
         }
-        // Jika offline → buat URL dari photoBlob
         else if (story.photoBlob) {
           photoSrc = URL.createObjectURL(story.photoBlob);
         } else {
-          photoSrc = "/images/placeholder.png"; // fallback
+          photoSrc = "/images/placeholder.png"; 
         }
 
         const createdAt = story.createdAt
           ? new Date(story.createdAt).toLocaleString()
           : "Offline";
 
-        const isOffline = !story.photoUrl; // Stories without photoUrl are from local DB
+        const isOffline = !story.photoUrl; 
         const badgeClass = isOffline ? 'badge offline' : 'badge synced';
         const badgeText = isOffline ? 'Offline' : 'Synced';
 
@@ -165,7 +160,6 @@ export default class StoriesPage {
         if (!story) return;
 
         try {
-          // Try API bookmark/unbookmark first if online and story has photoUrl
           let apiSuccess = false;
           if (navigator.onLine && story.photoUrl) {
             try {
@@ -182,11 +176,9 @@ export default class StoriesPage {
             }
           }
 
-          // Always update local bookmark status
           const newBookmarkStatus = await toggleBookmark(id);
           console.log(`Bookmark status updated locally: ${newBookmarkStatus}`);
 
-          // Update button appearance
           const wasBookmarked = story.isBookmarked;
           story.isBookmarked = newBookmarkStatus;
 
@@ -202,11 +194,9 @@ export default class StoriesPage {
           if (textSpan && textSpan !== iconSpan) {
             textSpan.textContent = newBookmarkStatus ? 'Bookmarked' : 'Bookmark';
           } else if (!iconSpan) {
-            // Fallback if no spans found
             btn.innerHTML = `<span class="bookmark-icon">${newBookmarkStatus ? '⭐' : '☆'}</span> ${newBookmarkStatus ? 'Bookmarked' : 'Bookmark'}`;
           }
 
-          // If API failed but we have online story, show warning
           if (!apiSuccess && story.photoUrl && navigator.onLine) {
             console.warn("Bookmark updated locally, but API sync may be needed");
           }
@@ -228,7 +218,6 @@ export default class StoriesPage {
         if (!story) return;
 
         try {
-          // Check if story is already in DB
           const existingStory = await getStoriesFromDB().then(stories => stories.find(s => s.id == id));
 
           if (existingStory) {
@@ -236,18 +225,16 @@ export default class StoriesPage {
             return;
           }
 
-          // Fetch the image as blob if it's an online story
           let photoBlob = null;
           if (story.photoUrl) {
             const response = await fetch(story.photoUrl);
             photoBlob = await response.blob();
           }
 
-          // Save to IndexedDB
           await addStoryToDB({
             ...story,
             photoBlob,
-            synced: true, // Online stories are considered synced
+            synced: true, 
           });
 
           alert("Story saved offline successfully");
@@ -270,7 +257,6 @@ export default class StoriesPage {
 
         console.log("Deleting story:", { id, story });
 
-        // Always try to delete from local DB first (this handles both online and offline stories)
         try {
           await deleteStoryFromDB(id);
           console.log("✅ Story deleted from local DB");
@@ -280,7 +266,6 @@ export default class StoriesPage {
           return;
         }
 
-        // For online stories, also try to delete from API
         if (navigator.onLine && story?.photoUrl) {
           try {
             await deleteStory(id);
@@ -290,7 +275,6 @@ export default class StoriesPage {
           }
         }
 
-        // Refresh the display
         await this.#loadStories();
         await this.#renderStories();
         this.#renderMap();
@@ -307,7 +291,7 @@ export default class StoriesPage {
     const L = getLeaflet();
     const map = L.map(mapEl).setView([-6.2, 106.816666], 10);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("https:
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
@@ -324,7 +308,6 @@ export default class StoriesPage {
     const syncBtn = document.getElementById("sync-btn");
     const syncStatus = document.getElementById("sync-status");
 
-    // Disable button and show syncing status
     syncBtn.disabled = true;
     syncBtn.textContent = "Syncing...";
     syncStatus.textContent = "Syncing offline stories...";
@@ -337,7 +320,6 @@ export default class StoriesPage {
         syncStatus.textContent = `Successfully synced ${syncedCount} stories!`;
         syncStatus.className = "sync-status success";
 
-        // Refresh the stories list
         await this.#loadStories();
         await this.#renderStories();
         this.#renderMap();
@@ -350,11 +332,9 @@ export default class StoriesPage {
       syncStatus.textContent = "Sync failed. Please try again.";
       syncStatus.className = "sync-status error";
     } finally {
-      // Re-enable button
       syncBtn.disabled = false;
       syncBtn.textContent = "Sync Offline Stories";
 
-      // Clear status after 5 seconds
       setTimeout(() => {
         syncStatus.textContent = "";
         syncStatus.className = "sync-status";
@@ -435,7 +415,6 @@ export default class StoriesPage {
       console.log("All stories cleared");
       alert("All stories cleared from local storage");
 
-      // Refresh display
       await this.#loadStories();
       await this.#renderStories();
       this.#renderMap();

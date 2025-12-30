@@ -17,7 +17,6 @@ export default defineConfig({
     },
   },
   plugins: [
-    // Inject push notification handlers into generated service worker
     {
       name: "add-push-handlers",
       closeBundle() {
@@ -68,7 +67,6 @@ self.addEventListener('notificationclick', (event) => {
 });
 `;
 
-        // Tambahkan sebelum akhir file
         swContent += pushHandlers;
         fs.writeFileSync(swPath, swContent);
         console.log("✅ Push handlers injected into service worker");

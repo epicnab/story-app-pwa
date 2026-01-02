@@ -10,13 +10,13 @@ clientsClaim();
 precacheAndRoute(self.__WB_MANIFEST);
 
 registerRoute(
-  ({ url }) => url.origin === "https:
+  ({ url }) => url.origin === "https://story-api.dicoding.dev",
   new NetworkFirst({
     cacheName: "dicoding-story-api",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 20,
-        maxAgeSeconds: 60 * 60 * 24 * 30, 
+        maxAgeSeconds: 60 * 60 * 24 * 30,
       }),
     ],
   })

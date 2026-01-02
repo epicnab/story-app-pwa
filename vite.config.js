@@ -34,8 +34,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || "New story added!",
-    icon: "/story-app-pwa/images/logo.png",
-    badge: "/story-app-pwa/images/logo.png",
+    icon: "/story-app-pwa/images/maskable_icon_x512.png",
+    badge: "/story-app-pwa/images/maskable_icon_x512.png",
     data: data.data || {},
     actions: [
       { action: "view", title: "View Story" },

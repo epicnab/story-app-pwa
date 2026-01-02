@@ -9,12 +9,12 @@
   "categories": ["social", "lifestyle", "photo"],
   "icons": [
     {
-      "src": "/story-app-pwa/images/maskable_icon_x512.png",
+      "src": "/story-app-pwa/images/app.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/story-app-pwa/images/maskable_icon_x512.png",
+      "src": "/story-app-pwa/images/app.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

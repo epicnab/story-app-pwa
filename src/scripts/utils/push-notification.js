@@ -57,6 +57,9 @@ export async function subscribePushNotification() {
 
 async function sendSubscriptionToServer(subscription) {
   const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No authentication token");
+  }
 
   const response = await fetch(`${CONFIG.BASE_URL}/notifications/subscribe`, {
     method: "POST",
@@ -68,7 +71,8 @@ async function sendSubscriptionToServer(subscription) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to send push subscription");
+    const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+    throw new Error(`Failed to send push subscription: ${errorData.message}`);
   }
 
   console.log("Push subscription sent successfully");

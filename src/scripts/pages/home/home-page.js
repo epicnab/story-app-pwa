@@ -7,8 +7,8 @@ export default class HomePage {
           <p>Share your travel stories and discover amazing places around the world.</p>
           <div class="hero-actions">
             <a href="#/stories" class="cta-button">View Stories</a>
-            <a href="#/login" class="cta-button secondary">Login</a>
-            <a href="#/register" class="cta-button secondary">Register</a>
+            <a href="#/login" class="cta-button secondary" id="login-link">Login</a>
+            <a href="#/register" class="cta-button secondary" id="register-link">Register</a>
           </div>
         </div>
       </section>
@@ -72,6 +72,23 @@ export default class HomePage {
   async afterRender() {
     if (window.lucide) {
       window.lucide.createIcons();
+    }
+
+    // Check login status and hide/show login/register buttons
+    const token = localStorage.getItem("token");
+    const isLoggedIn = !!token;
+
+    const loginLink = document.getElementById("login-link");
+    const registerLink = document.getElementById("register-link");
+
+    if (loginLink && registerLink) {
+      if (isLoggedIn) {
+        loginLink.style.display = "none";
+        registerLink.style.display = "none";
+      } else {
+        loginLink.style.display = "inline-block";
+        registerLink.style.display = "inline-block";
+      }
     }
 
     const { initPushNotification } = await import(

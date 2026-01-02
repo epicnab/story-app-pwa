@@ -19,7 +19,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-function updateNavigation() {
+window.updateNavigation = function() {
   const navList = document.getElementById("nav-list");
   const token = localStorage.getItem("token");
   const isLoggedIn = !!token;

@@ -23,9 +23,6 @@ export async function initDB() {
   return dbPromise;
 }
 
-/* ======================
-   CREATE / UPDATE
-====================== */
 export async function addStoryToDB(story) {
   const db = await initDB();
 
@@ -36,25 +33,17 @@ export async function addStoryToDB(story) {
   });
 }
 
-/* ======================
-   READ (ALL)
-====================== */
 export async function getStoriesFromDB() {
   const db = await initDB();
   return db.getAll(STORE_NAME);
 }
 
-/* ======================
-   READ (SINGLE) ✅ FIX ERROR BUILD
-====================== */
 export async function getStoryFromDB(id) {
   const db = await initDB();
   return db.get(STORE_NAME, id);
 }
 
-/* ======================
-   DELETE
-====================== */
+
 export async function deleteStoryFromDB(id) {
   console.log(`Deleting story from IndexedDB with ID: ${id}`);
   const db = await initDB();
@@ -71,9 +60,6 @@ export async function deleteStoryFromDB(id) {
   return result;
 }
 
-/* ======================
-   SYNC HELPERS
-====================== */
 export async function getUnsyncedStories() {
   const db = await initDB();
   const allStories = await db.getAll(STORE_NAME);
@@ -90,9 +76,6 @@ export async function markStoryAsSynced(id) {
   }
 }
 
-/* ======================
-   BOOKMARK HELPERS
-====================== */
 export async function isStoryBookmarked(storyId) {
   const db = await initDB();
   const story = await db.get(STORE_NAME, storyId);

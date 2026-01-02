@@ -2,9 +2,6 @@ import CONFIG from "../config.js";
 
 let subscription = null;
 
-/**
- * Ambil VAPID key dari API Dicoding
- */
 async function getVapidKey() {
   const token = localStorage.getItem("token");
   if (!token) throw new Error("User not authenticated");
@@ -23,9 +20,6 @@ async function getVapidKey() {
   return data.vapidPublicKey;
 }
 
-/**
- * Convert base64 ke Uint8Array
- */
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
@@ -36,9 +30,6 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
-/**
- * Subscribe push notification
- */
 export async function subscribePushNotification() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
     console.warn("Push notification not supported");
@@ -64,9 +55,6 @@ export async function subscribePushNotification() {
   await sendSubscriptionToServer(subscription);
 }
 
-/**
- * Kirim subscription ke server Dicoding
- */
 async function sendSubscriptionToServer(subscription) {
   const token = localStorage.getItem("token");
 
@@ -86,9 +74,7 @@ async function sendSubscriptionToServer(subscription) {
   console.log("Push subscription sent successfully");
 }
 
-/**
- * Unsubscribe push notification
- */
+
 export async function unsubscribePushNotification() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
     console.warn("Push notification not supported");
@@ -105,9 +91,7 @@ export async function unsubscribePushNotification() {
   }
 }
 
-/**
- * Kirim unsubscription ke server Dicoding
- */
+
 async function sendUnsubscriptionToServer(subscription) {
   const token = localStorage.getItem("token");
 
@@ -127,9 +111,7 @@ async function sendUnsubscriptionToServer(subscription) {
   console.log("Push unsubscription sent successfully");
 }
 
-/**
- * Check if push notification is enabled
- */
+
 export async function isPushNotificationEnabled() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
     return false;
@@ -140,9 +122,7 @@ export async function isPushNotificationEnabled() {
   return !!existingSubscription;
 }
 
-/**
- * Toggle push notification
- */
+
 export async function togglePushNotification() {
   const enabled = await isPushNotificationEnabled();
   if (enabled) {
@@ -154,10 +134,21 @@ export async function togglePushNotification() {
   }
 }
 
-/**
- * Initialize push notification (check current status)
- */
+
 export async function initPushNotification() {
-  // This function can be used for initialization if needed
   console.log("Push notification initialized");
+
+  // Auto-subscribe if logged in and not already subscribed
+  const token = localStorage.getItem("token");
+  if (token && "serviceWorker" in navigator && "PushManager" in window) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const existingSubscription = await registration.pushManager.getSubscription();
+      if (!existingSubscription) {
+        await subscribePushNotification();
+      }
+    } catch (error) {
+      console.warn("Auto-subscribe failed:", error);
+    }
+  }
 }

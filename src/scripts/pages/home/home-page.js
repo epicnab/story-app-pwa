@@ -21,7 +21,7 @@ export default class HomePage {
               <h3><i data-lucide="bell" class="setting-icon"></i> Push Notifications</h3>
               <p id="push-description">Receive notifications when new stories are added.</p>
               <div class="setting-toggle" id="push-toggle-container">
-                <label class="switch">
+                <label class="switch" for="push-notification-toggle">
                   <input type="checkbox" id="push-notification-toggle">
                   <span class="slider round"></span>
                 </label>
@@ -74,10 +74,14 @@ export default class HomePage {
       window.lucide.createIcons();
     }
 
-    const { initPushNotification } = await import("../../utils/push-notification.js");
+    const { initPushNotification } = await import(
+      "../../utils/push-notification.js"
+    );
     await initPushNotification();
 
-    const { initPWAInstall, canInstallPWA, showInstallPrompt } = await import("../../utils/pwa-install.js");
+    const { initPWAInstall, canInstallPWA, showInstallPrompt } = await import(
+      "../../utils/pwa-install.js"
+    );
     initPWAInstall();
 
     this.initPushNotificationToggle();
@@ -88,7 +92,9 @@ export default class HomePage {
     const toggleContainer = document.getElementById("push-toggle-container");
     const toggle = document.getElementById("push-notification-toggle");
     const status = document.getElementById("push-status");
-    const loginRequiredMessage = document.getElementById("login-required-message");
+    const loginRequiredMessage = document.getElementById(
+      "login-required-message"
+    );
 
     if (!toggleContainer || !toggle || !status || !loginRequiredMessage) return;
 
@@ -123,7 +129,7 @@ export default class HomePage {
         console.log("Push notification toggle successful, enabled:", isEnabled);
       } catch (error) {
         console.error("Failed to toggle push notifications:", error);
-        toggle.checked = !toggle.checked; 
+        toggle.checked = !toggle.checked;
 
         let errorMessage = "Failed to toggle push notifications.";
         if (error.message.includes("VAPID key")) {
@@ -150,13 +156,15 @@ export default class HomePage {
 
     if (!installCard || !installButton) return;
 
-    const { canInstallPWA, showInstallPrompt, isPWAInstallable } = await import("../../utils/pwa-install.js");
+    const { canInstallPWA, showInstallPrompt, isPWAInstallable } = await import(
+      "../../utils/pwa-install.js"
+    );
 
     if (canInstallPWA()) {
       installCard.style.display = "block";
     }
 
-    window.addEventListener('pwa-installable', (event) => {
+    window.addEventListener("pwa-installable", (event) => {
       if (event.detail.installable) {
         installCard.style.display = "block";
       }
@@ -174,7 +182,7 @@ export default class HomePage {
       }
     });
 
-    window.addEventListener('pwa-installed', () => {
+    window.addEventListener("pwa-installed", () => {
       installCard.style.display = "none";
     });
   }

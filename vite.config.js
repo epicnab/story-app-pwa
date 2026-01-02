@@ -111,13 +111,13 @@ self.addEventListener('notificationclick', (event) => {
         icons: [
           {
             src: "images/pwa.svg",
-            type: "image/svg+xml",
             sizes: "any",
+            type: "image/svg+xml",
           },
           {
             src: "images/pwa.svg",
-            type: "image/svg+xml",
             sizes: "any",
+            type: "image/svg+xml",
             purpose: "maskable",
           },
         ],

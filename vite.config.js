@@ -69,7 +69,6 @@ self.addEventListener('notificationclick', (event) => {
 
         swContent += pushHandlers;
         fs.writeFileSync(swPath, swContent);
-        console.log("✅ Push handlers injected into service worker");
       },
     },
 

@@ -136,9 +136,7 @@ export async function togglePushNotification() {
 
 
 export async function initPushNotification() {
-  console.log("Push notification initialized");
 
-  // Auto-subscribe if logged in and not already subscribed
   const token = localStorage.getItem("token");
   if (token && "serviceWorker" in navigator && "PushManager" in window) {
     try {

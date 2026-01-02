@@ -3,11 +3,10 @@ let isInstallable = false;
 
 export function initPWAInstall() {
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Don't prevent default to allow browser's install prompt
     deferredPrompt = e;
     isInstallable = true;
 
-    console.log('PWA install prompt is available');
+
 
     window.dispatchEvent(new CustomEvent('pwa-installable', { detail: { installable: true } }));
   });

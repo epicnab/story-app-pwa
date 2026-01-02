@@ -108,6 +108,7 @@ self.addEventListener('notificationclick', (event) => {
         orientation: "portrait",
         scope: "/story-app-pwa/",
         start_url: "/story-app-pwa/",
+
         icons: [
           {
             src: "images/maskable_icon_x512.png",

@@ -58,8 +58,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body || "Ada story baru 🎉",
-    icon: "/images/logo.png",
-    badge: "/images/logo.png",
+    icon: "/story-app-pwa/images/maskable_icon_x512.png",
+    badge: "/story-app-pwa/images/maskable_icon_x512.png",
   };
 
   event.waitUntil(

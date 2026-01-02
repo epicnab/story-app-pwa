@@ -110,12 +110,14 @@ self.addEventListener('notificationclick', (event) => {
         start_url: "/story-app-pwa/",
         icons: [
           {
-            src: "images/logo.png",
-            type: "image/png",
+            src: "images/pwa.svg",
+            type: "image/svg+xml",
+            sizes: "any",
           },
           {
-            src: "images/logo.png",
-            type: "image/png",
+            src: "images/pwa.svg",
+            type: "image/svg+xml",
+            sizes: "any",
             purpose: "maskable",
           },
         ],

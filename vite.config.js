@@ -34,8 +34,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || "New story added!",
-    icon: "/story-app-pwa/images/maskable_icon_x512.png",
-    badge: "/story-app-pwa/images/maskable_icon_x512.png",
+    icon: "/story-app-pwa/images/app.png",
+    badge: "/story-app-pwa/images/app.png",
     data: data.data || {},
     actions: [
       { action: "view", title: "View Story" },
@@ -110,12 +110,12 @@ self.addEventListener('notificationclick', (event) => {
 
         icons: [
           {
-            src: "images/maskable_icon_x512.png",
+            src: "images/app.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "images/maskable_icon_x512.png",
+            src: "images/app.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",

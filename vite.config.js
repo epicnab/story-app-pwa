@@ -111,12 +111,10 @@ self.addEventListener('notificationclick', (event) => {
         icons: [
           {
             src: "images/logo.png",
-            sizes: "512x512",
             type: "image/png",
           },
           {
             src: "images/logo.png",
-            sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
           },

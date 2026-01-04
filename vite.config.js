@@ -17,82 +17,11 @@ export default defineConfig({
     },
   },
   plugins: [
-    {
-      name: "add-push-handlers",
-      closeBundle() {
-        const swPath = resolve(__dirname, "dist/sw.js");
-        if (!fs.existsSync(swPath)) return;
-
-        let swContent = fs.readFileSync(swPath, "utf-8");
-
-        const pushHandlers = `
-self.addEventListener('push', (event) => {
-  let data = {};
-  if (event.data) {
-    data = event.data.json();
-  }
-
-  const options = {
-    body: data.body || "New story added!",
-    icon: "/story-app-pwa/images/icon-192x192.png",
-    badge: "/story-app-pwa/images/icon-192x192.png",
-    data: data.data || {},
-    actions: [
-      { action: "view", title: "View Story" },
-      { action: "close", title: "Close" }
-    ],
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(
-      data.title || "New Story Notification",
-      options
-    )
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-
-  if (event.action === "view") {
-    const storyId = event.notification.data?.storyId;
-    event.waitUntil(
-      clients.openWindow(
-        storyId
-          ? \`/story-app-pwa/story/\${storyId}\`
-          : "/story-app-pwa/stories"
-      )
-    );
-  }
-});
-`;
-
-        swContent += pushHandlers;
-        fs.writeFileSync(swPath, swContent);
-      },
-    },
-
     VitePWA({
+      strategies: "injectManifest",
+      swSrc: "src/sw.js",
+      swDest: "dist/sw.js",
       registerType: "autoUpdate",
-      strategies: "generateSW",
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/story-api\.dicoding\.dev\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-            },
-          },
-        ],
-        clientsClaim: true,
-        skipWaiting: true,
-      },
       injectRegister: null,
       devOptions: {
         enabled: true,

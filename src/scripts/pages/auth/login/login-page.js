@@ -40,10 +40,7 @@ export default class LoginPage {
 
       try {
         await loginUser(userData);
-        // Update navigation immediately after login
-        if (window.updateNavigation) {
-          window.updateNavigation();
-        }
+
         messageDiv.textContent = "Login successful! Redirecting...";
         messageDiv.className = "message success";
         setTimeout(() => {

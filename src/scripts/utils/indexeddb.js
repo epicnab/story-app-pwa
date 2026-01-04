@@ -75,28 +75,3 @@ export async function markStoryAsSynced(id) {
     await db.put(STORE_NAME, story);
   }
 }
-
-export async function isStoryBookmarked(storyId) {
-  const db = await initDB();
-  const story = await db.get(STORE_NAME, storyId);
-  return story?.bookmarked === true;
-}
-
-export async function toggleBookmark(storyId) {
-  const db = await initDB();
-  const story = await db.get(STORE_NAME, storyId);
-
-  if (story) {
-    story.bookmarked = !story.bookmarked;
-    await db.put(STORE_NAME, story);
-    return story.bookmarked;
-  }
-
-  return false;
-}
-
-export async function getBookmarkedStories() {
-  const db = await initDB();
-  const allStories = await db.getAll(STORE_NAME);
-  return allStories.filter(story => story.bookmarked === true);
-}

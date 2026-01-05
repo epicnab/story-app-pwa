@@ -1,24 +1,7 @@
+import { ENDPOINTS } from "../data/api.js";
 import CONFIG from "../config.js";
 
-let subscription = null;
-
-async function getVapidKey() {
-  const token = localStorage.getItem("token");
-  if (!token) throw new Error("User not authenticated");
-
-  const response = await fetch(`${CONFIG.BASE_URL}/notifications/keys`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch VAPID key");
-  }
-
-  const data = await response.json();
-  return data.vapidPublicKey;
-}
+const VAPID_PUBLIC_KEY = "BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -44,10 +27,9 @@ export async function subscribePushNotification() {
     return;
   }
 
-  const vapidKey = await getVapidKey();
-  const convertedKey = urlBase64ToUint8Array(vapidKey);
+  const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
 
-  subscription = await registration.pushManager.subscribe({
+  const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: convertedKey,
   });
@@ -61,13 +43,21 @@ async function sendSubscriptionToServer(subscription) {
     throw new Error("No authentication token");
   }
 
-  const response = await fetch(`${CONFIG.BASE_URL}/notifications/subscribe`, {
+  const subData = {
+    endpoint: subscription.endpoint,
+    keys: {
+      p256dh: subscription.toJSON().keys.p256dh,
+      auth: subscription.toJSON().keys.auth
+    }
+  }
+
+  const response = await fetch(ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(subscription),
+    body: JSON.stringify(subData),
   });
 
   if (!response.ok) {
@@ -91,7 +81,6 @@ export async function unsubscribePushNotification() {
   if (existingSubscription) {
     await existingSubscription.unsubscribe();
     await sendUnsubscriptionToServer(existingSubscription);
-    subscription = null;
   }
 }
 
@@ -99,13 +88,13 @@ export async function unsubscribePushNotification() {
 async function sendUnsubscriptionToServer(subscription) {
   const token = localStorage.getItem("token");
 
-  const response = await fetch(`${CONFIG.BASE_URL}/notifications/unsubscribe`, {
-    method: "POST",
+  const response = await fetch(ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, {
+    method: "DELETE",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(subscription),
+    body: JSON.stringify({ endpoint: subscription.endpoint }),
   });
 
   if (!response.ok) {

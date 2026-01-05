@@ -1,9 +1,10 @@
 import CONFIG from "../config";
 
-const ENDPOINTS = {
+export const ENDPOINTS = {
   STORIES: `${CONFIG.BASE_URL}/stories`,
   REGISTER: `${CONFIG.BASE_URL}/register`,
   LOGIN: `${CONFIG.BASE_URL}/login`,
+  SUBSCRIBE_NOTIFICATIONS: `${CONFIG.BASE_URL}/notifications/subscribe`,
 };
 
 export async function getStories() {

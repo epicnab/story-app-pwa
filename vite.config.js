@@ -89,6 +89,22 @@ export default defineConfig({
             type: "image/png"
           }
         ],
+        screenshots: [
+          {
+            src: "/story-app-pwa/images/app.png",
+            sizes: "640x480",
+            type: "image/png",
+            form_factor: "wide",
+            label: "Story App Screenshot"
+          },
+          {
+            src: "/story-app-pwa/images/app.png",
+            sizes: "320x480",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "Story App Screenshot"
+          }
+        ],
       },
     }),
   ],

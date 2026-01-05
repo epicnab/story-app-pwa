@@ -2,6 +2,7 @@ import "../styles/styles.css";
 
 import App from "./pages/app";
 import { syncOfflineStories } from "./utils/network-sync.js";
+import { initPWAInstall, showInstallPrompt } from "./utils/pwa-install.js";
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -40,6 +41,9 @@ window.updateNavigation = function() {
     navItems += '<li><a href="#/register">Register</a></li>';
   }
 
+  // Add install button placeholder
+  navItems += '<li><a id="install-btn" href="#" style="display: none; background-color: #007bff; color: white; padding: 8px 12px; border-radius: 4px;">Install App</a></li>';
+
   navList.innerHTML = navItems;
 
   if (isLoggedIn) {
@@ -63,6 +67,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   updateNavigation();
+
+  // PWA Install Initialization
+  initPWAInstall();
+
+  window.addEventListener('pwa-installable', (event) => {
+    const installBtn = document.getElementById('install-btn');
+    if (installBtn && event.detail.installable) {
+      installBtn.style.display = 'block';
+      installBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showInstallPrompt();
+      });
+    }
+  });
 
   await app.renderPage();
 

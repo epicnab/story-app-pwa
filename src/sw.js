@@ -45,15 +45,33 @@ self.addEventListener("sync", (event) => {
 /* =====================
    Push Notification
 ===================== */
-self.addEventListener('push', (event) => {
-  console.log('Service worker pushing...');
-  async function chainPromise() {
-    const data = await event.data.json();
-    await self.registration.showNotification(data.title, {
-      body: data.options.body,
-    });
+self.addEventListener("push", (event) => {
+  console.log("Service Worker: PUSH");
+
+  let data;
+  try {
+    data = event.data.json();
+  } catch (error) {
+    console.error("Service Worker: Failed to parse push data", error);
+    data = { title: "New Notification", options: { body: "Something new happened!" } };
   }
-  event.waitUntil(chainPromise());
+
+  const title = data.title || "New Notification";
+  const options = {
+    body: data.options?.body || "Something new happened!",
+    icon: "/story-app-pwa/images/icon-192x192.png",
+    badge: "/story-app-pwa/images/icon-96x96.png",
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: 1,
+    },
+    ...data.options,
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {

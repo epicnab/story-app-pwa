@@ -22,6 +22,7 @@ export default class HomePage {
               <p id="push-description">Receive notifications when new stories are added.</p>
               <div class="setting-toggle" id="push-toggle-container">
                 <label class="switch" for="push-notification-toggle">
+                  <span class="sr-only">Enable Push Notifications</span>
                   <input type="checkbox" id="push-notification-toggle">
                   <span class="slider round"></span>
                 </label>
